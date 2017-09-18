@@ -1,0 +1,35 @@
+---
+title: "Structure of dynfrail function"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# General structure
+The `dynfrail()` function takes 4 inputs:
+
+- a `formula` object with a `+cluster(id)` in the rhs
+- a `data.frame` object 
+- a `dynfrail_dist` object containing:
+    - the frailty distribution
+    - the `nints` option for doing a piecewise constant frailty
+    - the `times` option - a vector of time points at which the frailty changes
+- a `control` argument
+
+# Argument parsing
+So in the end let's say that the coarsing 
+
+# Data representation
+We need the following objects:
+For each cluster `i` we need a vector of length `L`, `c_i` that contains at each time point the sum of the conditional hazards at that specific time point from who's at risk.
+
+Each of this vectors has to be converted to a `C_i_mat` `L x L` matrix that contains
+`C_i_mat[k1, k2] = c_i[k1] + ... + c_i[k2]`.
+
+# The E step
+The goal of the E step is to calculate for each individual the value of the frailty at each time point as specified before (or at all time points). 
+
+# The M step
+In the M step we do a time-dependent Cox model with the frailty as time-dependent offset. 
