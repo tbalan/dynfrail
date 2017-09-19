@@ -1,58 +1,31 @@
 dynfrail_control <- function(opt_fit = TRUE,
                             se = TRUE,
                             se_adj = TRUE,
-                            ca_test = TRUE,
-                            only_ca_test = FALSE,
-                            lik_ci = TRUE,
-                            lik_ci_intervals = list(interval = c(-7, 20),
-                                                    interval_stable = c(0, 20)),
                             nlm_control = list(),
                             inner_control = list(eps = 0.0001,
-                                                 maxit = Inf,
-                                                 fast_fit = TRUE,
-                                                 verbose = FALSE,
-                                                 lower_tol = 20,
+                                                 maxit = 6,
+                                                 verbose = TRUE,
+                                                 # lower_tol = 20,
                                                  lik_tol = 1)
 ) {
   # calculate SE as well
 
-  # Here some checks
-
-  if(isTRUE(only_ca_test) & !isTRUE(ca_test))
-    stop("control: if only_ca_test is TRUE then ca_test must be TRUE as well")
-
-  if(isTRUE(lik_ci)) {
-    if(is.null(lik_ci_intervals))
-      stop("opt_control must be a list which contains a named element interval")
-    if(length(lik_ci_intervals$interval) != 2)
-      stop("interval must be of length 2")
-    if(lik_ci_intervals$interval[1] < -7 | lik_ci_intervals$interval[2] > 20)
-      warning("extreme values for interval, there might be some numerical trouble")
-  }
 
   inner_c <- function(eps = 0.0001,
                       maxit = Inf,
-                      fast_fit = TRUE,
                       verbose = TRUE,
-                      lower_tol = 20,
                       lik_tol = 1) {
     list(eps = eps,
          maxit = maxit,
-         fast_fit = fast_fit,
          verbose = verbose,
-         lower_tol = lower_tol,
          lik_tol = lik_tol)
-  }
+    }
 
   inner_control <- do.call(inner_c, inner_control)
 
   res <- list(opt_fit = opt_fit,
               se = se,
               se_adj = se_adj,
-              ca_test = ca_test,
-              only_ca_test = only_ca_test,
-              lik_ci = lik_ci,
-              lik_ci_intervals = lik_ci_intervals,
               nlm_control = nlm_control,
               inner_control = inner_control)
   attr(res, "class") <- c("dynfrail_control")

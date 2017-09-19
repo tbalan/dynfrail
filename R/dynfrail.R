@@ -1,6 +1,35 @@
+#' Fitting dynamic frailty models with the EM algorithm
+#'
+#'
+#' @include em_fit.R
+#' @importFrom survival Surv
+#' @importFrom magrittr "%>%"
+#' @importFrom Rcpp evalCpp
+#' @useDynLib dynfrail, .registration=TRUE
+#' @include dynfrail_aux.R
+#'
+#' @param formula A formula that contains on the left hand side an object of the type \code{Surv}
+#' and on the right hand side a \code{+cluster(id)} statement. Optionally, also a \code{+terminal()} statement
+#' may be added, and then a score test for association between the event process and the result in the specified
+#' column is performed. See details.
+#' @param data A data frame in which the formula argument can be evaluated
+#' @param distribution An object as created by \code{\link{dynfrail_dist}}
+#' @param control An object as created by \code{\link{dynfrail_control}}
+#' @param model Logical. Should the model frame be returned?
+#' @param model.matrix Logical. Should the model matrix be returned?
+#' @param ... Other arguments, currently used to warn about deprecated argument names
+#' @export
+#'
+#' @return
+#' @export
+#'
+#' @examples
 dynfrail <- function(formula, data,
                      distribution = dynfrail_distribution(),
-                     control = dynfrail_control())
+                     control = dynfrail_control(),
+                     model = FALSE,
+                     model.matrix = FALSE,
+                     ...)
 {
 
 
@@ -98,7 +127,33 @@ dynfrail <- function(formula, data,
                  #order_id = order_id,
                  time = time, indx = indx, indx2 = indx2,
                  time_to_stop = time_to_stop)
+  atrisk$x2 <- x2
 
+  # Some stuff that won't change
+  atrisk$id_interval <- paste0(df_dynfrail$id_, "_",df_dynfrail$interval_)
+
+  # events / interval for each id
+  death_id_interval <- rowsum(Y[,3], group = atrisk$id_interval, reorder = TRUE) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column() %>%
+    tbl_df() %>%
+    separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+    arrange(id, interval)
+
+  delta <- split(death_id_interval$V1, death_id_interval$id)
+  intervals <- split(death_id_interval$interval, death_id_interval$id)
+
+  atrisk$times_incluster <- lapply(intervals, function(x)
+    tev_unique_ord[x]
+  )
+
+  atrisk$events_incluster <- lapply(delta, function(x) {
+    rep(1:length(x), x)
+  })
+
+  atrisk$interval_incluster <-
+    split(df_dynfrail$interval_, df_dynfrail$id_)
+  # First calculation of the cumulative hazard
   nrisk <- nrisk - c(esum, 0,0)[indx]
 
   haz <- nevent/nrisk * newrisk
@@ -106,21 +161,13 @@ dynfrail <- function(formula, data,
   basehaz_line <- haz[atrisk$time_to_stop]
 
   cumhaz <- cumsum(haz)
-  plot(cumhaz)
 
   cumhaz_0_line <- cumhaz[atrisk$time_to_stop]
   cumhaz_tstart <- c(0, cumhaz)[atrisk$indx2 + 1]
   cumhaz_line <- (cumhaz_0_line - cumhaz_tstart)  * explp / newrisk
 
-  # Now to build up the c vectors
-  id_interval <- paste0(df_dynfrail$id_, "_",df_dynfrail$interval_)
-
-length(cumhaz_line)
-  length(id_interval)
-  nrow(df_dynfrail)
-
   chz_id_interval <- rowsum(cumhaz_line,
-                            group = id_interval,
+                            group = atrisk$id_interval,
                             reorder = TRUE) %>%
     as.data.frame()  %>%
     tibble::rownames_to_column() %>%
@@ -128,67 +175,22 @@ length(cumhaz_line)
     separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
     arrange(id, interval)
 
-  death_id_interval <- rowsum(Y[,3], group = id_interval, reorder = TRUE) %>%
-    as.data.frame() %>%
-    tibble::rownames_to_column() %>%
-    tbl_df() %>%
-    separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
-    arrange(id, interval)
-
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
-  delta <- split(death_id_interval$V1, death_id_interval$id)
 
-  # logdistance
-
-  # print("ss")
-  intervals <- split(death_id_interval$interval, death_id_interval$id)
-
-  # The Laplace transform in R
-  # c_mat <- matrix(0, length(c_vecs[[1]]), length(c_vecs[[1]]))
-
-  # for(i in 1:nrow(c_mat))
-  #   for(j in i:nrow(c_mat))
-  #     c_mat[i,j] <- sum(c_vecs[[1]][i:j])
-  #
-  # tevsminInf <- c(-Inf, tev_unique_ord)
-  # tevsInf <- c(tev_unique_ord, Inf)
-
-  ggamma <- 2
-  aalpha <- 2
-  llambda <- 0.1
-  # THIS is the zeta kl
-  # the lambda^2 can suck ass
-  # Gmat <- outer(diff(exp(llambda*tevsminInf)),-diff(exp(-llambda*tevsInf)),"*")
-  #
-  # outer(1:3, 4:6, "*")
-  # -aalpha * sum(log((c_mat + ggamma) / ggamma) * Gmat)
-  #
-  # log((c_mat + ggamma) / ggamma)[1,]
-  #
-  # gg1 <- lapply(intervals, function(x)
-  #    diff(c(0, exp(llambda * tev_unique_ord[x])))
-  # )
-
-  gg <- lapply(intervals, function(x)
-    tev_unique_ord[x]
-  )
-  # browser()
-
-  tmp <- lapply(delta, function(x) {
-    rep(1:length(x), x)
-  })
-
-  cur <- lapply(seq_along(c_vecs), function(id) {
-    Estep_id(events = tmp[[id]], cvec = c_vecs[[id]],
-             aalpha = aalpha,
-             ggamma = ggamma, dist = 0,
-             pvfm = -1/2, times = gg[[id]], llambda = llambda)
-  })
+  browser()
+  distribution$theta = 30
+  em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
+         dist = distribution$dist,
+         pvfm = distribution$pvfm, Y = Y, Xmat = X,
+         atrisk = atrisk, basehaz_line = basehaz_line,
+         mcox =list(coefficients = g, loglik = mcox$loglik),
+         c_vecs = c_vecs,
+         se = FALSE,
+         inner_control = control$inner_control)
 
 
 
-  cur
 
 
 
-}
+  }
