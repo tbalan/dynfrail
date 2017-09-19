@@ -88,7 +88,7 @@ dynfrail_control <- function(opt_fit = TRUE,
 dynfrail_distribution <- function(dist = "gamma",
                                   theta = 2,
                                   pvfm = -1/2,
-                                  left_truncation = FALSE,
+                                  lambda = 0.1,
                                   n_ints = NULL,
                                   times = NULL) {
 
@@ -101,8 +101,8 @@ dynfrail_distribution <- function(dist = "gamma",
   if (dist == "pvf" & (pvfm < -1 | pvfm == 0))
     stop("pvfm must be >-1 and not equal to 0")
 
-  if(!is.logical(left_truncation)) stop("left_truncation must be TRUE or FALSE")
-  res <- list(dist = dist, theta = theta, pvfm = pvfm, left_truncation = left_truncation, n_ints = n_ints, times = times)
+  # if(!is.logical(left_truncation)) stop("left_truncation must be TRUE or FALSE")
+  res <- list(dist = dist, theta = theta, pvfm = pvfm, lambda = lambda, n_ints = n_ints, times = times)
   attr(res, "class") <- c("dynfrail_distribution")
   return(res)
 }

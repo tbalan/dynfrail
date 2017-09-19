@@ -24,7 +24,7 @@ dynfrail <- function(formula, data,
 
   } else
     if(!is.null(distribution$times)) cut <- .distribution$times else
-      cut <- tev_unique_ord
+      cut <- tev_unique_ord[-length(tev_unique_ord)]
 
   df_dynfrail <- survSplit(formula, data = data, cut = cut, episode = "interval_")
   names(df_dynfrail)[grep("cluster", names(df_dynfrail))] <- "id_"
@@ -106,48 +106,89 @@ dynfrail <- function(formula, data,
   basehaz_line <- haz[atrisk$time_to_stop]
 
   cumhaz <- cumsum(haz)
+  plot(cumhaz)
 
   cumhaz_0_line <- cumhaz[atrisk$time_to_stop]
   cumhaz_tstart <- c(0, cumhaz)[atrisk$indx2 + 1]
   cumhaz_line <- (cumhaz_0_line - cumhaz_tstart)  * explp / newrisk
 
-
   # Now to build up the c vectors
   id_interval <- paste0(df_dynfrail$id_, "_",df_dynfrail$interval_)
 
-  c_vecs <- split(rowsum(cumhaz_line, group = id_interval), df_dynfrail$id_)
-  delta <- split(rowsum(Y[,3], group = id_interval), df_dynfrail$id_)
+length(cumhaz_line)
+  length(id_interval)
+  nrow(df_dynfrail)
 
-  intervals <- split(df_dynfrail$interval_, df_dynfrail$id_)
+  chz_id_interval <- rowsum(cumhaz_line,
+                            group = id_interval,
+                            reorder = TRUE) %>%
+    as.data.frame()  %>%
+    tibble::rownames_to_column() %>%
+    tbl_df() %>%
+    separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+    arrange(id, interval)
+
+  death_id_interval <- rowsum(Y[,3], group = id_interval, reorder = TRUE) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column() %>%
+    tbl_df() %>%
+    separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+    arrange(id, interval)
+
+  c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
+  delta <- split(death_id_interval$V1, death_id_interval$id)
+
+  # logdistance
+
+  # print("ss")
+  intervals <- split(death_id_interval$interval, death_id_interval$id)
+
+  # The Laplace transform in R
+  # c_mat <- matrix(0, length(c_vecs[[1]]), length(c_vecs[[1]]))
+
+  # for(i in 1:nrow(c_mat))
+  #   for(j in i:nrow(c_mat))
+  #     c_mat[i,j] <- sum(c_vecs[[1]][i:j])
+  #
+  # tevsminInf <- c(-Inf, tev_unique_ord)
+  # tevsInf <- c(tev_unique_ord, Inf)
+
+  ggamma <- 2
+  aalpha <- 2
+  llambda <- 0.1
+  # THIS is the zeta kl
+  # the lambda^2 can suck ass
+  # Gmat <- outer(diff(exp(llambda*tevsminInf)),-diff(exp(-llambda*tevsInf)),"*")
+  #
+  # outer(1:3, 4:6, "*")
+  # -aalpha * sum(log((c_mat + ggamma) / ggamma) * Gmat)
+  #
+  # log((c_mat + ggamma) / ggamma)[1,]
+  #
+  # gg1 <- lapply(intervals, function(x)
+  #    diff(c(0, exp(llambda * tev_unique_ord[x])))
+  # )
+
+  gg <- lapply(intervals, function(x)
+    tev_unique_ord[x]
+  )
+  # browser()
+
   tmp <- lapply(delta, function(x) {
     rep(1:length(x), x)
   })
 
-  # Now: the thing is that there are some missing but we don't care about that
-
-    for(i in 1:length(c_vecs)) {
-    c_vecs[[1]]
-
-    SdivideC(tmp = rep(1:length(delta[[i]], delta[[i]] )))
-  }
-
-  # this has the chz for each tau interval from each person
+  cur <- lapply(seq_along(c_vecs), function(id) {
+    Estep_id(events = tmp[[id]], cvec = c_vecs[[id]],
+             aalpha = aalpha,
+             ggamma = ggamma, dist = 0,
+             pvfm = -1/2, times = gg[[id]], llambda = llambda)
+  })
 
 
-  # next steps in C++:
-  # take this and then loop over individuals
-  # determine the vector of events that we need to
-  # determine the maximum number of intervals for the taus (we have that probably
 
-  # then select what's relevant for one individual
-  # then calculate the expansion of the lambdas
-
-  Cvec <- rowsum(cumhaz_line, atrisk$order_id)
+  cur
 
 
-  ## Input for E step:
-  # -
-  # now here it goes:
 
-  # first: a one fit for fixed theta and lambda
 }
