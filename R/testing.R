@@ -5,8 +5,20 @@ head(cgd)
 library(survival)
 library(tidyverse)
 source('~/dynfrail/R/dynfrail_arguments.R')
+source("R/dynfrail_aux.R")
 source("R/dynfrail.R")
+source('~/dynfrail/R/em_fit.R')
 Rcpp::sourceCpp("estep_new.cpp")
+
+
+asthma <- read.table("asthma.txt")
+small_asthma <- asthma %>% group_by(Patid) %>% mutate(rn = row_number()) %>% ungroup() %>%
+  filter(rn <= 4) %>% mutate(Begin = Begin / 10, End = End / 10)
+
+dynfrail(Surv(Begin, End, Status) ~ Drug + cluster(Patid),
+         data = small_asthma)
+
+
 
 dynfrail(formula = Surv(tstart, tstop, status) ~ sex + treat + cluster(id),
          data = cgd
@@ -14,7 +26,16 @@ dynfrail(formula = Surv(tstart, tstop, status) ~ sex + treat + cluster(id),
 
 data(rats)
 head(rats)
-dynfrail(formula = Surv(rep(0, nrow(rats)), time, status) ~ sex + rx + cluster(litter),
+rats <- rats %>%
+  mutate(tstart = 0)
+dynfrail(formula = Surv(tstart, time, status) ~ sex + rx + cluster(litter),
+         data = rats,distribution = dynfrail_distribution(theta = 2, lambda = 0.1)
+)
+
+library(frailtyEM)
+emfrail(formula = Surv(tstart, time, status) ~ sex + rx + cluster(litter),
          data = rats
 )
+
+
 sums(1:5, 2, 4)

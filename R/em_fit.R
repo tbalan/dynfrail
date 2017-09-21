@@ -38,7 +38,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   loglik_old = -Inf
   ncycles <- 0
-
+  browser()
 
   convergence <- FALSE
   while(!isTRUE(convergence)) {

@@ -48,7 +48,9 @@ dynfrail <- function(formula, data,
   tev_unique_ord <- sort(unique(Y[,2][Y[,3]==1]))
 
   if(!is.null(distribution$n_ints)) {
-    cut <- findInterval(x = quantile(tev_unique_ord, probs = seq(from = 0, to = 1, length.out = n_ints + 2))[-c(1, n_ints + 1)],
+    cut <- findInterval(x = quantile(tev_unique_ord,
+                                     probs = seq(from = 0, to = 1,
+                                                 length.out = distribution$n_ints + 2))[-c(1, distribution$n_ints + 1)],
       vec = tev_unique_ord)
 
   } else
@@ -59,8 +61,9 @@ dynfrail <- function(formula, data,
   names(df_dynfrail)[grep("cluster", names(df_dynfrail))] <- "id_"
 
 
+  pos_id <- grep("cluster", attr(terms(formula), "term.labels"))
 
-  terms2 <- drop.terms(terms(formula), drop = 3, keep.response = TRUE)
+  terms2 <- drop.terms(terms(formula), drop = pos_id, keep.response = TRUE)
 
   mf <- model.frame(terms2, df_dynfrail)
 
@@ -177,8 +180,16 @@ dynfrail <- function(formula, data,
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
 
-  browser()
-  distribution$theta = 30
+
+  # em_fit(logfrailtypar = log(c(2.25, 0.01)),
+  #        dist = distribution$dist,
+  #        pvfm = distribution$pvfm, Y = Y, Xmat = X,
+  #        atrisk = atrisk, basehaz_line = basehaz_line,
+  #        mcox =list(coefficients = g, loglik = mcox$loglik),
+  #        c_vecs = c_vecs,
+  #        se = FALSE,
+  #        inner_control = control$inner_control)
+
   em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
          dist = distribution$dist,
          pvfm = distribution$pvfm, Y = Y, Xmat = X,

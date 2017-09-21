@@ -62,7 +62,7 @@ dynfrail_distribution <- function(dist = "gamma",
                                   theta = 2,
                                   pvfm = -1/2,
                                   lambda = 0.1,
-                                  n_ints = NULL,
+                                  n_ints = 10,
                                   times = NULL) {
 
   if (!(dist %in% c("gamma", "stable", "pvf")))
