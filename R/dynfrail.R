@@ -47,17 +47,25 @@ dynfrail <- function(formula, data,
 
   tev_unique_ord <- sort(unique(Y[,2][Y[,3]==1]))
 
+  # browser()
+
   if(!is.null(distribution$n_ints)) {
-    cut <- findInterval(x = quantile(tev_unique_ord,
-                                     probs = seq(from = 0, to = 1,
-                                                 length.out = distribution$n_ints + 2))[-c(1, distribution$n_ints + 1)],
-      vec = tev_unique_ord)
+
+    quants <- quantile(tev_unique_ord,
+             probs = seq(from = 0, to = 1,
+                         length.out = distribution$n_ints + 2))
+
+
+    cut <- tev_unique_ord[findInterval(x = quants[-c(1, length(quants))],
+      vec = tev_unique_ord)]
 
   } else
-    if(!is.null(distribution$times)) cut <- .distribution$times else
+    if(!is.null(distribution$times)) cut <- distribution$times else
       cut <- tev_unique_ord[-length(tev_unique_ord)]
 
   df_dynfrail <- survSplit(formula, data = data, cut = cut, episode = "interval_")
+
+
   names(df_dynfrail)[grep("cluster", names(df_dynfrail))] <- "id_"
 
 
@@ -179,7 +187,7 @@ dynfrail <- function(formula, data,
     arrange(id, interval)
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
-
+  # browser()
 
   # em_fit(logfrailtypar = log(c(2.25, 0.01)),
   #        dist = distribution$dist,

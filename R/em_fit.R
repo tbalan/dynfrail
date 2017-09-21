@@ -14,7 +14,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
 
   pars <- dist_to_pars(dist, logfrailtypar, pvfm)
-  # browser()
+  # browser()0.1
   if(length(Xmat)==0) {
     g_x <- matrix(rep(0, nrow(Y)),ncol = 1)
   } else {
@@ -38,7 +38,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   loglik_old = -Inf
   ncycles <- 0
-  browser()
+  # browser()
 
   convergence <- FALSE
   while(!isTRUE(convergence)) {
@@ -49,6 +49,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                ggamma = pars$ggamma, dist = 0,
                pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda)
     })
+
 
 
     # log-likelihood
@@ -66,6 +67,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     if(abs(loglik - loglik_old) < inner_control$eps) break
 
     print(loglik)
+    print(paste("beta", mcox$coefficients))
     loglik_old <- loglik
 
 
@@ -76,6 +78,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                                   atrisk$interval_incluster,
                                   SIMPLIFY = FALSE
     )))
+
 
     mcox <- survival::agreg.fit(x = Xmat, y = Y, strata = NULL, offset = logz, init = NULL,
                                 control = survival::coxph.control(), weights = NULL,
@@ -90,9 +93,11 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
       g_x <- t(mcox$coefficients %*% t(Xmat))
     }
 
-    explp <- exp(mcox$linear.predictors)
 
-    newrisk <- exp(c(atrisk$x2 %*% mcox$coefficients) + 0)
+    explp <- exp(g_x)
+    #explp <- exp(mcox$linear.predictors)
+
+    # newrisk <- exp(c(atrisk$x2 %*% mcox$coefficients) + 0)
 
     # Idea: nrisk has the sum of elp who leave later at every tstop
     # esum has the sum of elp who enter at every tstart
@@ -105,7 +110,9 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
 
     nrisk <- nrisk - c(esum, 0,0)[atrisk$indx]
-    haz <- atrisk$nevent/nrisk * newrisk
+    haz <- atrisk$nevent/nrisk #  * newrisk
+
+
     cumhaz <- cumsum(haz)
 
     # baseline hazard for each tstop
@@ -113,7 +120,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     cumhaz_0_line <- cumhaz[atrisk$time_to_stop]
 
     cumhaz_tstart <- c(0, cumhaz)[atrisk$indx2 + 1]
-    cumhaz_line <- (cumhaz_0_line - cumhaz_tstart)  * explp / newrisk
+    cumhaz_line <- (cumhaz_0_line - cumhaz_tstart)  * explp #  / newrisk
 
     chz_id_interval <- rowsum(cumhaz_line,
                               group = atrisk$id_interval,
