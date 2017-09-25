@@ -187,7 +187,7 @@ dynfrail <- function(formula, data,
     arrange(id, interval)
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
-  # browser()
+   # browser()
 
   # em_fit(logfrailtypar = log(c(2.25, 0.01)),
   #        dist = distribution$dist,
@@ -198,16 +198,36 @@ dynfrail <- function(formula, data,
   #        se = FALSE,
   #        inner_control = control$inner_control)
 
-  em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
-         dist = distribution$dist,
-         pvfm = distribution$pvfm, Y = Y, Xmat = X,
-         atrisk = atrisk, basehaz_line = basehaz_line,
-         mcox =list(coefficients = g, loglik = mcox$loglik),
-         c_vecs = c_vecs,
-         se = FALSE,
-         inner_control = control$inner_control)
+  outer_m <- do.call(nlm,
+                     args = c(list(f = em_fit, p = log(c(distribution$theta, distribution$lambda)),
+                                   dist = distribution$dist,
+                                   pvfm = distribution$pvfm, Y = Y, Xmat = X,
+                                   atrisk = atrisk, basehaz_line = basehaz_line,
+                                   mcox =list(coefficients = g, loglik = mcox$loglik),
+                                   c_vecs = c_vecs,
+                                   se = FALSE,
+                                   inner_control = control$inner_control   ), control$nlm_control))
+  # nlm(f = em_fit, p = log(c(distribution$theta, distribution$lambda)),
+  #                     dist = distribution$dist,
+  #                     pvfm = distribution$pvfm, Y = Y, Xmat = X,
+  #                     atrisk = atrisk, basehaz_line = basehaz_line,
+  #                     mcox =list(coefficients = g, loglik = mcox$loglik),
+  #                     c_vecs = c_vecs,
+  #                     se = FALSE,
+  #                     inner_control = control$inner_control    )
+  #
+  # em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
+  #        dist = distribution$dist,
+  #        pvfm = distribution$pvfm, Y = Y, Xmat = X,
+  #        atrisk = atrisk, basehaz_line = basehaz_line,
+  #        mcox =list(coefficients = g, loglik = mcox$loglik),
+  #        c_vecs = c_vecs,
+  #        se = FALSE,
+  #        inner_control = control$inner_control)
 
 
+
+  outer_m
 
 
 
