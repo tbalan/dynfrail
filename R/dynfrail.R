@@ -188,98 +188,43 @@ dynfrail <- function(formula, data,
     arrange(id, interval)
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
-  browser()
+  # browser()
 
-  c_vecs
+  # c_vecs
 
-  em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
-         dist = distribution$dist,
-         pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
-         mcox =list(coefficients = g, loglik = mcox$loglik),
-         c_vecs = c_vecs,
-         se = FALSE,
-         inner_control = control$inner_control)
-  # 4047.997 e aicisha
-
-  em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
-         dist = distribution$dist,
-         pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
-         mcox =list(coefficients = g, loglik = mcox$loglik),
-         c_vecs = c_vecs,
-         se = FALSE,
-         inner_control = control$inner_control)
-
-  k <- lapply(1/seq(from = 0.01, to = 2, length.out = 25), function(th)
-    em_fit(logfrailtypar = log(c(th, distribution$lambda)),
-           dist = distribution$dist,
-           pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
-           mcox =list(coefficients = g, loglik = mcox$loglik),
-           c_vecs = c_vecs,
-           se = FALSE,
-           inner_control = control$inner_control)
-    )
-
-  plot(seq(from = 0.01, to = 2, length.out = 25), do.call(c, k))
-
-
-  outer_m <- do.call(nlm,
-                     args = c(list(f = em_fit, p = log(c(distribution$theta, 3)),
-                                   dist = distribution$dist,
-                                   pvfm = distribution$pvfm, Y = Y, Xmat = X,
-                                   atrisk = atrisk, basehaz_line = basehaz_line,
-                                   mcox =list(coefficients = g, loglik = mcox$loglik),
-                                   c_vecs = c_vecs,
-                                   se = FALSE,
-                                   inner_control = control$inner_control   ), control$nlm_control))
-
-  outer_m$estimate
-
-
-  optimize(f = function(llam)
-    em_fit(logfrailtypar = log(c(distribution$theta, llam)),
-           dist = distribution$dist,
-           pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
-           mcox =list(coefficients = g, loglik = mcox$loglik),
-           c_vecs = c_vecs,
-           se = FALSE,
-           inner_control = control$inner_control), lower = 1e-5, upper = 30)
-
-
-
-
-  outer_m <- do.call(nlm,
-                     args = c(list(f = em_fit, p = log(c(distribution$theta, 3)),
-                                   dist = distribution$dist,
-                                   pvfm = distribution$pvfm, Y = Y, Xmat = X,
-                                   atrisk = atrisk, basehaz_line = basehaz_line,
-                                   mcox =list(coefficients = g, loglik = mcox$loglik),
-                                   c_vecs = c_vecs,
-                                   se = FALSE,
-                                   inner_control = control$inner_control   ), control$nlm_control))
-  outer_m
-  # nlm(f = em_fit, p = log(c(distribution$theta, distribution$lambda)),
-  #                     dist = distribution$dist,
-  #                     pvfm = distribution$pvfm, Y = Y, Xmat = X,
-  #                     atrisk = atrisk, basehaz_line = basehaz_line,
-  #                     mcox =list(coefficients = g, loglik = mcox$loglik),
-  #                     c_vecs = c_vecs,
-  #                     se = FALSE,
-  #                     inner_control = control$inner_control    )
   #
-  # em_fit(logfrailtypar = log(c(distribution$theta, distribution$lambda)),
-  #        dist = distribution$dist,
-  #        pvfm = distribution$pvfm, Y = Y, Xmat = X,
-  #        atrisk = atrisk, basehaz_line = basehaz_line,
-  #        mcox =list(coefficients = g, loglik = mcox$loglik),
-  #        c_vecs = c_vecs,
-  #        se = FALSE,
-  #        inner_control = control$inner_control)
+  # k <- lapply(1/seq(from = 0.01, to = 2, length.out = 25), function(th)
+  #   em_fit(logfrailtypar = log(c(th, distribution$lambda)),
+  #          dist = distribution$dist,
+  #          pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
+  #          mcox =list(coefficients = g, loglik = mcox$loglik),
+  #          c_vecs = c_vecs,
+  #          se = FALSE,
+  #          inner_control = control$inner_control)
+  #   )
+  #
+  # plot(seq(from = 0.01, to = 2, length.out = 25), do.call(c, k))
 
 
+  outer_m <- do.call(nlm,
+                     args = c(list(f = em_fit, p = log(c(distribution$theta, 3)),
+                                   dist = distribution$dist,
+                                   pvfm = distribution$pvfm, Y = Y, Xmat = X,
+                                   atrisk = atrisk, basehaz_line = basehaz_line,
+                                   mcox =list(coefficients = g, loglik = mcox$loglik),
+                                   c_vecs = c_vecs,
+                                   se = FALSE,
+                                   inner_control = control$inner_control   ), control$nlm_control))
 
-  outer_m
-
-
+  inner_m <- em_fit(logfrailtypar = c(outer_m$estimate[1], outer_m$estimate[2]),
+         dist = "pvf",
+         pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
+         mcox =list(coefficients = g, loglik = mcox$loglik),
+         c_vecs = c_vecs,
+         se = FALSE,
+         inner_control = control$inner_control,
+         return_loglik = FALSE)
+  list(outer_m = outer_m, inner_m = inner_m)
 
 
   }

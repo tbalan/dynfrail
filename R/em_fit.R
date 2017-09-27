@@ -148,6 +148,11 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     return(-loglik)
   }  # for when maximizing
 
+  if(!isTRUE(return_loglik)) {
+    return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz))
+
+  }
+
 
 }
 

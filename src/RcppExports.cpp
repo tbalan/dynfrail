@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // Estep_id
 NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, double ggamma, int dist, double pvfm, NumericVector times, double llambda);
-RcppExport SEXP _dynfrail_Estep_id(SEXP eventsSEXP, SEXP cvecSEXP, SEXP aalphaSEXP, SEXP ggammaSEXP, SEXP distSEXP, SEXP pvfmSEXP, SEXP timesSEXP, SEXP llambdaSEXP) {
+RcppExport SEXP dynfrail_Estep_id(SEXP eventsSEXP, SEXP cvecSEXP, SEXP aalphaSEXP, SEXP ggammaSEXP, SEXP distSEXP, SEXP pvfmSEXP, SEXP timesSEXP, SEXP llambdaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,7 +25,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_dynfrail_Estep_id", (DL_FUNC) &_dynfrail_Estep_id, 8},
+    {"dynfrail_Estep_id", (DL_FUNC) &dynfrail_Estep_id, 8},
     {NULL, NULL, 0}
 };
 
