@@ -1,3 +1,34 @@
+#' Control parameters for dynfrail
+#'
+#' @param opt_fit Logical. Whether the outer optimization should be carried out.
+#' If \code{FALSE}, then the frailty parameter is treated as fixed and the \code{emfrail} function returns only log-likelihood. See details.
+#' @param se Ignored
+#' @param se_adj Ignored
+#' @param nlm_control A list of named arguments to be sent to \code{nlm} for the outer optimization.
+#' @param inner_control A list of parameters for the inner optimization. See details.
+#'
+#' @return An object of the type \code{emfrail_control}.
+#' @export
+#'
+#' @details
+#' The \code{nlm_control} argument should not overalp with \code{hessian}, \code{f} or \code{p}.
+#'
+#' The \code{inner_control} argument should be a list with the following items:
+#' \itemize{
+#' \item{\code{eps}}{ A criterion for convergence of the EM algorithm (difference between two consecutive values of the log-likelihood)}
+#' \item{\code{maxit}}{ The maximum number of iterations between the E step and the M step}
+#' \item{\code{verbose}}{ Logical, whether details of the optimization should be printed}
+#' \item{\code{lik_tol}}{ For values higher than this, the algorithm returns a warning when the log-likelihood decreases between EM steps. Technically, this should not happen, but
+#' if the parameter \eqn{\theta} is somewhere really far from the maximum, numerical problems might lead in very small likelihood decreases.
+#' }}
+#'
+#' The starting value of the outer optimization may be set in the \code{dynfrail_dist()} argument.
+#'
+#' @seealso \code{\link{emfrail}}, \code{\link{emfrail_dist}}, \code{\link{emfrail_pll}}
+#' @examples
+#' dynfrail_control()
+#' dynfrail_control(inner_control = list(maxit = 2))
+#'
 dynfrail_control <- function(opt_fit = TRUE,
                             se = TRUE,
                             se_adj = TRUE,

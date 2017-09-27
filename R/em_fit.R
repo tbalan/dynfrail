@@ -50,7 +50,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda)
     })
 
-
+   Estep
 
     # log-likelihood
     llik_contrib <- sum(do.call(c, lapply(Estep, function(x) {
@@ -127,9 +127,8 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                               reorder = TRUE) %>%
       as.data.frame()  %>%
       tibble::rownames_to_column() %>%
-      tbl_df() %>%
-      separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
-      arrange(id, interval)
+      tidyr::separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+      dplyr::arrange(id, interval)
 
     c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
 
@@ -144,6 +143,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
 
   if(isTRUE(return_loglik)) {
+    browser()
     if(isTRUE(inner_control$verbose)) print(paste("loglik = ",loglik))
     return(-loglik)
   }  # for when maximizing
