@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 Estep_id <- function(events, cvec, aalpha, ggamma, dist, pvfm, times, llambda) {
-    .Call(dynfrail_Estep_id, events, cvec, aalpha, ggamma, dist, pvfm, times, llambda)
+    .Call(`_dynfrail_Estep_id`, events, cvec, aalpha, ggamma, dist, pvfm, times, llambda)
 }
 

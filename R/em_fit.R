@@ -50,7 +50,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda)
     })
 
-   Estep
+   # Estep
 
     # log-likelihood
     llik_contrib <- sum(do.call(c, lapply(Estep, function(x) {
@@ -94,7 +94,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     }
 
 
-    explp <- exp(g_x)
+    explp <- exp(lp)
     #explp <- exp(mcox$linear.predictors)
 
     # newrisk <- exp(c(atrisk$x2 %*% mcox$coefficients) + 0)
@@ -120,9 +120,9 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     cumhaz_0_line <- cumhaz[atrisk$time_to_stop]
 
     cumhaz_tstart <- c(0, cumhaz)[atrisk$indx2 + 1]
-    cumhaz_line <- (cumhaz_0_line - cumhaz_tstart)  * explp #  / newrisk
+    cumhaz_line <- (cumhaz_0_line - cumhaz_tstart)  #* explp #  / newrisk
 
-    chz_id_interval <- rowsum(cumhaz_line,
+    chz_id_interval <- rowsum(cumhaz_line * exp(g_x),
                               group = atrisk$id_interval,
                               reorder = TRUE) %>%
       as.data.frame()  %>%
@@ -143,7 +143,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
 
   if(isTRUE(return_loglik)) {
-    browser()
+    # browser()
     if(isTRUE(inner_control$verbose)) print(paste("loglik = ",loglik))
     return(-loglik)
   }  # for when maximizing
