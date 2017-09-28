@@ -62,12 +62,12 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
 
     if(loglik < loglik_old - inner_control$lik_tol)
-      warning(paste0("likelihood decrease of ", loglik - loglik_old ))
+      stop(paste0("likelihood decrease of ", loglik - loglik_old ))
 
     if(abs(loglik - loglik_old) < inner_control$eps) break
 
-    print(loglik)
-    print(paste("beta", mcox$coefficients))
+    # print(loglik)
+    #print(paste("beta", mcox$coefficients))
     loglik_old <- loglik
 
 
@@ -144,6 +144,11 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   if(isTRUE(return_loglik)) {
     # browser()
+
+    print(paste0("ggamma: ",round(pars$ggamma, digits = 2),
+                 " llambda: ",round(pars$llambda, digits = 2),
+                 " loglik: ",round(loglik, digits = 3)))
+
     if(isTRUE(inner_control$verbose)) print(paste("loglik = ",loglik))
     return(-loglik)
   }  # for when maximizing
