@@ -153,10 +153,73 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     return(-loglik)
   }  # for when maximizing
 
+
+  tev <- atrisk$time[haz > 0]
+  haz_tev = haz[haz > 0]
+
+  # if no SE, then return here
+
+  nev_tp <- atrisk$nevent[atrisk$nevent!=0]
+
+  z_elp <- exp(lp)
+  elp = exp(lp)  / exp(logz)
+
+  browser()
+
+
+  if(length(Xmat)>0) {
+    x <- lapply(apply(Xmat, 1, list), function(x) x[[1]])
+    x_z_elp <- Map(function(a,b) a*b, x, z_elp)
+    x_z_elp_H0 <- Map(function(a,b,c) a*b*c, x, z_elp, cumhaz_line)
+    x_elp_H0 <- Map(function(a,b,c) a*b*c, x, z_elp / exp(logz), cumhaz_line)
+
+    xx <- lapply(x, function(x) x %*% t(x) )
+    xx_z_elp_H0 <- Map(function(a,b, c) a * b * c, xx, z_elp, cumhaz_line)
+    m_d2l_dgdg <- Reduce("+", xx_z_elp_H0)
+
+    m_d2l_dhdg <-
+      do.call(rbind,
+              lapply(lapply(
+                lapply(tev, function(tk) which(Y[,1] < tk & tk <= Y[,2])),
+                function(x) x_z_elp[x]),
+                function(...) Reduce("+", ...))
+      )
+
+  } else {
+    m_d2l_dgdg <- NULL
+    m_d2l_dhdg <- NULL
+  }
+
+  m_d2l_dhdh <- diag(nev_tp/haz_tev^2)
+
+
+  Imat <- matrix(0, ncol(Xmat) + length(tev), ncol(Xmat) + length(tev))
+
+  if(!is.null(mcox$coefficients)) {
+    Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
+    Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
+    Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
+  }
+
+  Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
+
+  browser()
+
+  # This is d/dg
+  dl1_dg <- Reduce("+", mapply(function(a,b) a*b, Y[,3], x, SIMPLIFY = FALSE))
+  # sum z x H
+  dl2_dg <- Reduce("+", x_z_elp_H0)
+
+  # Now thing is to make the cor_dg:
+  # make list like c_vecs but also with x in it (p x 1)
+
+  rowsum(do.call(rbind, x_elp_H0), atrisk$order_id)
+
   if(!isTRUE(return_loglik)) {
     return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz))
 
   }
+
 
 
 }
