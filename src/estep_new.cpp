@@ -1,5 +1,7 @@
 // #include <Rcpp.h>
 #include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+
 using namespace Rcpp;
 
 double g(const double& llambda, NumericVector& time, const int& pos1, const int& pos2) {
@@ -377,7 +379,7 @@ int Vcov_adj_id2(NumericVector events, NumericVector cvec, double aalpha, double
 
 
 // [[Rcpp::export]]
-int Vcov_adj_id3(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
+int Vcov_adj_id4(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
                  int dist, double pvfm, NumericVector times, double llambda,
                  NumericVector elp,
                  const arma::mat& xelph,
@@ -386,6 +388,10 @@ int Vcov_adj_id3(NumericVector events, NumericVector cvec, double aalpha, double
                  NumericVector ez) {
 
   //define the outputs
+
+  arma::mat betabeta = arma::mat(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
+  Rcout<<betabeta.n_rows<< " x "<<betabeta.n_cols;
+
   //for (beta, beta) it will be a 2x2 matrix
   //for lambda lambda it will have to be a
 
@@ -423,8 +429,23 @@ int Vcov_adj_id3(NumericVector events, NumericVector cvec, double aalpha, double
       //e[z1z2]
       double exy_exey = divideSum(newvec2, cvec, aalpha, ggamma, dist, pvfm, times, llambda)/denom - ez[i-1] * ez[j-1];
 
-      //get e[z1], e[z2] ?!?
+      Rcout<<"i="<<i<<", j="<<j<<std::endl;
 
+      for(std::vector<int>::iterator l1 = int_rows[i-1].begin(); l1 != int_rows[i-1].end(); l1++)
+        for(std::vector<int>::iterator l2 = int_rows[j-1].begin(); l2 != int_rows[j-1].end(); l2++) {
+          Rcout<<*l1<<" "<<*l2<<" /// ";
+          // add up the corresponding rows of xelph and xelph into two vectors
+          // for p in tau[l1] {
+                // add at row (p) elp[l1]  * xelph[l2]
+                //  for q in tau[l2] add at (p,q) elp[p] * elp[q]
+          // }
+
+
+          // for p in tau[l1]
+
+        }
+
+        // calc the sums of xelph timex xelph into betabeta
 
 
     }
