@@ -263,6 +263,94 @@ NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, 
 
 }
 
+
+// [[Rcpp::export]]
+int Vcov_adj_id(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
+                       int dist, double pvfm, NumericVector times, double llambda,
+                       NumericVector elp, NumericMatrix xelph, NumericMatrix tau, Rcpp::List interval_rows) {
+
+  // make the List into a vector of vectors
+  // Rcout<<interval_rows.size();
+  std::vector<std::vector<int> > int_rows(interval_rows.size());
+
+  for(int i = 0; i<interval_rows.size(); i++) {
+    Rcpp::NumericVector s1(interval_rows[i]);
+    int_rows[i] = std::vector<int>(s1.begin(), s1.end());
+  }
+
+
+  std::vector<int> events_add(events.begin(), events.end());
+
+  double denom = divideSum(events_add, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
+
+  std::vector<double> num;
+
+  // For each interval
+  for(int i = 1; i<= cvec.size(); i++) {
+
+
+    // the vector of events;
+    std::vector<int> newvec = events_add;
+
+    //
+    std::vector<int>::iterator pos = std::upper_bound(newvec.begin(), newvec.end(), i);
+
+    newvec.insert(pos, i);
+
+    // then determine pos for j
+
+    //then do a newvec.interst for j
+
+    // now dis will be e[xy]
+    num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
+
+    // acquire e[x]e[y]
+
+    // calculate the stuff for the 3 correction things
+
+    // kill yourself gently
+
+  }
+
+
+  return 0;
+
+
+  //
+  // NumericVector out(num.begin(), num.end());
+  //
+  // out.push_back(denom);
+  //
+  //
+  // // Also add the log-Laplace transform
+  // double logLaplace = 0.0;
+  //
+  // // Rcout<<"cvec size: "<<cvec.size()<<" times size "<<times.size();
+  // // Rcout<<std::endl;
+  //
+  // for(unsigned int i = 0; i < cvec.size(); i++)
+  //   for(unsigned int j = i; j < cvec.size(); j++) {
+  //
+  //     double ck1k2 = std::accumulate(cvec.begin() + i, cvec.begin() + j + 1, 0.0);
+  //     logLaplace += psi(dist, pvfm, ggamma, 0, ck1k2) * g(llambda, times, i, j);
+  //     // Rcout<<"("<<i + 1<<" "<<j + 1<<")="<<g(llambda, times, i, j)<<" / ";
+  //
+  //     // Rcout<<p;
+  //   }
+  //
+  //   logLaplace *= (-1) * aalpha;
+  //
+  // out.push_back(logLaplace);
+  //
+  // return out;
+
+}
+
+
+
+
+
+
 /*** R
 set.seed(1)
 # Last one is the denominator

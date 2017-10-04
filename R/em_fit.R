@@ -50,7 +50,6 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda)
     })
 
-   # Estep
 
     # log-likelihood
     llik_contrib <- sum(do.call(c, lapply(Estep, function(x) {
@@ -206,14 +205,51 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
   browser()
 
   # This is d/dg
-  dl1_dg <- Reduce("+", mapply(function(a,b) a*b, Y[,3], x, SIMPLIFY = FALSE))
-  # sum z x H
-  dl2_dg <- Reduce("+", x_z_elp_H0)
 
-  # Now thing is to make the cor_dg:
-  # make list like c_vecs but also with x in it (p x 1)
+  dl1_dg <- apply(Xmat * Y[,3], 2, sum)
 
-  rowsum(do.call(rbind, x_elp_H0), atrisk$order_id)
+  dl2_dg <- apply(Xmat  * z_elp * cumhaz_line, 2, sum)
+
+
+  dl1_dl <- sum(nev_tp / haz_tev)
+
+  # all this stuff is 0 in the end, isn't it?
+
+  # Here the idea is to use indices instead of event times.
+  # if tau1 = 0 and tau2 = 10, this means that the event time points for which that at risk
+  # period stands for are 1, 2, 3, ... 10.
+  # in C++ terms, this means positions 0 (from tau1) to 9 (so with tau2 we will always use < instead of <=)
+  tau1 <- findInterval(Y[,1], tev)
+  tau2 <- findInterval(Y[,2], tev, left.open = FALSE, rightmost.closed = FALSE)
+  tau <- seq_along(tev)
+
+  # todo: add cluster into the atrisk (or not who cares)
+  cluster_id <- rep(1:length(atrisk$times_incluster), sapply(atrisk$interval_incluster, length))
+
+  rows_tau <- split(data.frame(tau1, tau2), cluster_id)
+  rows_elp <- split(elp, cluster_id)
+
+  rows_x_elp_H0 <- split(as.data.frame(Xmat * elp * cumhaz_line), cluster_id)
+
+
+  # within each individual, for each interval which lines are contained within that interval
+  interval_rows <- lapply(atrisk$interval_incluster, function(x) {
+    lapply(unique(x), function(y) which(y==x))
+  })
+
+  length(rows_tau)
+  length(interval_rows)
+  length(rows_elp)
+  length(rows_x_elp_H0)
+
+  # Now to make sum calculations
+
+  Vcov_adj_id(events = atrisk$events_incluster[[1]], cvec = c_vecs[[1]],
+           aalpha = pars$aalpha,
+           ggamma = pars$ggamma, dist = 0,
+           pvfm = -1/2, times = atrisk$times_incluster[[1]], llambda = pars$llambda,
+           elp = rows_elp[[1]],
+           xelph = as.matrix(rows_x_elp_H0[[1]]), tau = as.matrix(rows_tau[[1]]), interval_rows = interval_rows[[1]])
 
   if(!isTRUE(return_loglik)) {
     return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz))

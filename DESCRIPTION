@@ -20,4 +20,5 @@ Collate:
     'dynfrail.R'
     'dynfrail_arguments.R'
     'hello.R'
+    'test_models.R'
     'testing.R'

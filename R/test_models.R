@@ -17,7 +17,7 @@
 # # log-likelihood: -4023.475
 # # theta: 2.461172
 #
-#
+# #
 # mod1 <- dynfrail(Surv(Begin, End, Status) ~ cluster(Patid) + Drug + y, data = small_asthma,
 #          distribution = dynfrail_distribution(n_ints = 3, theta = 2),
 #          control = dynfrail_control(inner_control = list(maxit = 10)))
