@@ -202,8 +202,6 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
 
-  browser()
-
   # This is d/dg
 
   dl1_dg <- apply(Xmat * Y[,3], 2, sum)
@@ -244,12 +242,22 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   # Now to make sum calculations
 
-  Vcov_adj_id(events = atrisk$events_incluster[[1]], cvec = c_vecs[[1]],
+  ez <- lapply(Estep, function(x) -x[1:(length(x) - 2)] / x[length(x) - 1])
+
+
+  id <- 2
+
+  browser()
+
+  Vcov_adj_id3(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
            aalpha = pars$aalpha,
            ggamma = pars$ggamma, dist = 0,
-           pvfm = -1/2, times = atrisk$times_incluster[[1]], llambda = pars$llambda,
-           elp = rows_elp[[1]],
-           xelph = as.matrix(rows_x_elp_H0[[1]]), tau = as.matrix(rows_tau[[1]]), interval_rows = interval_rows[[1]])
+           pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda,
+           elp = rows_elp[[id]],
+           xelph = as.matrix(rows_x_elp_H0[[id]]),
+           tau = as.matrix(rows_tau[[id]]),
+           interval_rows = interval_rows[[id]],
+           ez = ez[[id]])
 
   if(!isTRUE(return_loglik)) {
     return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz))

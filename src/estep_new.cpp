@@ -1,4 +1,5 @@
-#include <Rcpp.h>
+// #include <Rcpp.h>
+#include <RcppArmadillo.h>
 using namespace Rcpp;
 
 double g(const double& llambda, NumericVector& time, const int& pos1, const int& pos2) {
@@ -214,11 +215,16 @@ NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, 
                 int dist, double pvfm, NumericVector times, double llambda) {
 
   std::vector<int> events_add(events.begin(), events.end());
-
   double denom = divideSum(events_add, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
 
   std::vector<double> num;
 
+  std::vector<int> base = events_add;
+  // Rcout<<"base: ";
+  // for(std::vector<int>::iterator it = base.begin(); it != base.end(); it++)
+  //   Rcout<<*it<<" ";
+
+  //Rcout<<std::endl;
   // For each time point...
   for(int i = 1; i<= cvec.size(); i++) {
 
@@ -229,9 +235,12 @@ NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, 
 
     newvec.insert(pos, i);
     // for(std::vector<int>::iterator it = newvec.begin(); it != newvec.end(); it++)
-    //   Rcout<<*it<<"  ";
+    //   Rcout<<*it<<" ";
+    //
+    // Rcout<<" // "<<divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
     num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
 
+    // Rcout<<std::endl;
   }
 
   NumericVector out(num.begin(), num.end());
@@ -265,12 +274,20 @@ NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, 
 
 
 // [[Rcpp::export]]
-int Vcov_adj_id(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
+int Vcov_adj_id2(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
                        int dist, double pvfm, NumericVector times, double llambda,
-                       NumericVector elp, NumericMatrix xelph, NumericMatrix tau, Rcpp::List interval_rows) {
+                       NumericVector elp,
+                       NumericMatrix xelph,
+                       NumericMatrix tau,
+                       Rcpp::List interval_rows,
+                       NumericVector ez) {
+
+  //define the outputs
+  //for (beta, beta) it will be a 2x2 matrix
+
+  //for lambda lambda it will have to be a
 
   // make the List into a vector of vectors
-  // Rcout<<interval_rows.size();
   std::vector<std::vector<int> > int_rows(interval_rows.size());
 
   for(int i = 0; i<interval_rows.size(); i++) {
@@ -278,31 +295,42 @@ int Vcov_adj_id(NumericVector events, NumericVector cvec, double aalpha, double 
     int_rows[i] = std::vector<int>(s1.begin(), s1.end());
   }
 
-
   std::vector<int> events_add(events.begin(), events.end());
 
   double denom = divideSum(events_add, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
-
-  std::vector<double> num;
 
   // For each interval
   for(int i = 1; i<= cvec.size(); i++) {
 
 
-    // the vector of events;
+    // the vector of events; this is from 1 to L
     std::vector<int> newvec = events_add;
 
-    //
     std::vector<int>::iterator pos = std::upper_bound(newvec.begin(), newvec.end(), i);
 
     newvec.insert(pos, i);
 
-    // then determine pos for j
+    for(int j = i; j<= cvec.size(); j++) {
 
-    //then do a newvec.interst for j
+      std::vector<int> newvec2 = newvec;
+
+      std::vector<int>::iterator pos2 = std::upper_bound(newvec2.begin(), newvec2.end(), j);
+
+      newvec2.insert(pos2, j);
+
+      //e[z1z2]
+      double exy_exey = divideSum(newvec2, cvec, aalpha, ggamma, dist, pvfm, times, llambda)/denom - ez[i-1] * ez[j-1];
+
+      //get e[z1], e[z2] ?!?
+
+
+
+    }
+
+
 
     // now dis will be e[xy]
-    num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
+    // num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
 
     // acquire e[x]e[y]
 
@@ -348,6 +376,105 @@ int Vcov_adj_id(NumericVector events, NumericVector cvec, double aalpha, double 
 
 
 
+// [[Rcpp::export]]
+int Vcov_adj_id3(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
+                 int dist, double pvfm, NumericVector times, double llambda,
+                 NumericVector elp,
+                 const arma::mat& xelph,
+                 const arma::mat& tau,
+                 Rcpp::List interval_rows,
+                 NumericVector ez) {
+
+  //define the outputs
+  //for (beta, beta) it will be a 2x2 matrix
+  //for lambda lambda it will have to be a
+
+  // make the List into a vector of vectors
+  std::vector<std::vector<int> > int_rows(interval_rows.size());
+
+  for(int i = 0; i<interval_rows.size(); i++) {
+    Rcpp::NumericVector s1(interval_rows[i]);
+    int_rows[i] = std::vector<int>(s1.begin(), s1.end());
+  }
+
+  std::vector<int> events_add(events.begin(), events.end());
+
+  double denom = divideSum(events_add, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
+
+  // For each interval
+  for(int i = 1; i<= cvec.size(); i++) {
+
+
+    // the vector of events; this is from 1 to L
+    std::vector<int> newvec = events_add;
+
+    std::vector<int>::iterator pos = std::upper_bound(newvec.begin(), newvec.end(), i);
+
+    newvec.insert(pos, i);
+
+    for(int j = i; j<= cvec.size(); j++) {
+
+      std::vector<int> newvec2 = newvec;
+
+      std::vector<int>::iterator pos2 = std::upper_bound(newvec2.begin(), newvec2.end(), j);
+
+      newvec2.insert(pos2, j);
+
+      //e[z1z2]
+      double exy_exey = divideSum(newvec2, cvec, aalpha, ggamma, dist, pvfm, times, llambda)/denom - ez[i-1] * ez[j-1];
+
+      //get e[z1], e[z2] ?!?
+
+
+
+    }
+
+
+
+    // now dis will be e[xy]
+    // num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
+
+    // acquire e[x]e[y]
+
+    // calculate the stuff for the 3 correction things
+
+    // kill yourself gently
+
+  }
+
+
+  return 0;
+
+
+  //
+  // NumericVector out(num.begin(), num.end());
+  //
+  // out.push_back(denom);
+  //
+  //
+  // // Also add the log-Laplace transform
+  // double logLaplace = 0.0;
+  //
+  // // Rcout<<"cvec size: "<<cvec.size()<<" times size "<<times.size();
+  // // Rcout<<std::endl;
+  //
+  // for(unsigned int i = 0; i < cvec.size(); i++)
+  //   for(unsigned int j = i; j < cvec.size(); j++) {
+  //
+  //     double ck1k2 = std::accumulate(cvec.begin() + i, cvec.begin() + j + 1, 0.0);
+  //     logLaplace += psi(dist, pvfm, ggamma, 0, ck1k2) * g(llambda, times, i, j);
+  //     // Rcout<<"("<<i + 1<<" "<<j + 1<<")="<<g(llambda, times, i, j)<<" / ";
+  //
+  //     // Rcout<<p;
+  //   }
+  //
+  //   logLaplace *= (-1) * aalpha;
+  //
+  // out.push_back(logLaplace);
+  //
+  // return out;
+
+}
 
 
 
