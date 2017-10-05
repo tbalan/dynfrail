@@ -379,18 +379,23 @@ int Vcov_adj_id2(NumericVector events, NumericVector cvec, double aalpha, double
 
 
 // [[Rcpp::export]]
-int Vcov_adj_id4(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
+List Vcov_adj_id5(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
                  int dist, double pvfm, NumericVector times, double llambda,
                  NumericVector elp,
                  const arma::mat& xelph,
                  const arma::mat& tau,
                  Rcpp::List interval_rows,
-                 NumericVector ez) {
+                 NumericVector ez,
+                 int n_times) {
 
   //define the outputs
 
-  arma::mat betabeta = arma::mat(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
-  Rcout<<betabeta.n_rows<< " x "<<betabeta.n_cols;
+  //arma::mat betabeta = arma::mat(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
+  arma::mat betabeta(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
+  std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
+  arma::mat betalambda(n_times, xelph.n_cols, arma::fill::zeros);
+
+  // Rcout<<betabeta.n_rows<< " x "<<betabeta.n_cols;
 
   //for (beta, beta) it will be a 2x2 matrix
   //for lambda lambda it will have to be a
@@ -429,53 +434,91 @@ int Vcov_adj_id4(NumericVector events, NumericVector cvec, double aalpha, double
       //e[z1z2]
       double exy_exey = divideSum(newvec2, cvec, aalpha, ggamma, dist, pvfm, times, llambda)/denom - ez[i-1] * ez[j-1];
 
-      Rcout<<"i="<<i<<", j="<<j<<std::endl;
+      // Rcout<<"i="<<i<<", j="<<j<<std::endl;
 
-      for(std::vector<int>::iterator l1 = int_rows[i-1].begin(); l1 != int_rows[i-1].end(); l1++)
+      // std::vector<double> tmp1(xelph.n_cols, 0.0);
+      // std::vector<double> tmp2(xelph.n_cols, 0.0);
+      arma::rowvec tmp1(xelph.n_cols, arma::fill::zeros);
+      arma::rowvec tmp2(xelph.n_cols, arma::fill::zeros);
+
+      for(std::vector<int>::iterator l1 = int_rows[i-1].begin(); l1 != int_rows[i-1].end(); l1++) {
+
+        tmp1 += xelph.row(*l1 - 1);
+        // Rcout<<"add line "<<*l1<<" to tmp1";
+        //
+        // Rcout<<std::endl;
+
         for(std::vector<int>::iterator l2 = int_rows[j-1].begin(); l2 != int_rows[j-1].end(); l2++) {
 
-          Rcout<<*l1<<" "<<*l2<<" /// ";
-          Rcout<<"["<<tau(*l1-1, 0)<<", "<<tau(*l1-1, 1)<<"] // ";
-          Rcout<<"["<<tau(*l2-1, 0)<<", "<<tau(*l2-1, 1)<<"] //";
-
-          Rcout<<std::endl;
+          // Rcout<<*l1<<" "<<*l2<<" /// ";
+          // Rcout<<"["<<tau(*l1-1, 0)<<", "<<tau(*l1-1, 1)<<") // ";
+          // Rcout<<"["<<tau(*l2-1, 0)<<", "<<tau(*l2-1, 1)<<") //";
+          //
+          // Rcout<<std::endl;
 
           for(int p = tau(*l1 - 1, 0); p < tau(*l1 - 1, 1); p++)  {
-            // betalambda should be a (beta) x (lambda) kind of matrix
-            // betalambda[,p] += xepph2[,l1]
+            if(i == j) {
+              betalambda.row(p) += elp[*l1-1] * xelph.row(*l2-1);
+            } else
+              betalambda.row(p) += 2.0 * elp[*l1-1] * xelph.row(*l2-1);
+
+
+            for(int q = tau(*l2 -1, 0); q < tau(*l2 - 1, 1); q++)
+              if(p <= q)
+                if (i==j) {
+                  lambdalambda[n_times * p - p * (p+1)/2 + q] += elp[*l1-1] * elp[*l2-1];
+                } else {
+                  lambdalambda[n_times * p - p * (p+1)/2 + q] += 2 * elp[*l1-1] * elp[*l2-1];
+                }
+
           }
 
-                    // add up the corresponding rows of xelph and xelph into two vectors
-          // for p in tau[l1] {
-                // add at row (p) elp[l1]  * xelph[l2]
-                //  for q in tau[l2] add at (p,q) elp[p] * elp[q]
-          // }
+          // this one must be added just once
+          if(l1 == int_rows[i-1].begin()) {
+            tmp2 += xelph.row(*l2 - 1);
+            // Rcout<<"add line "<<*l2<<" to tmp2";
+            // Rcout<<std::endl;
+          }
 
 
-          // for p in tau[l1]
 
         }
 
-        // calc the sums of xelph timex xelph into betabeta
+
+      }
+
+      // Rcout<<std::endl<<" ======== "<<std::endl;
+      // Rcout<<"i = "<<i<<", j = "<<j<<std::endl;
+      //
+      //   Rcout<<"tmp1"<<std::endl;
+      //   for(int mm = 0; mm < tmp1.n_cols; mm ++)
+      //     Rcout<<tmp1[mm]<<" ";
+      //   Rcout<<std::endl;
+      //   Rcout<<"tmp2"<<std::endl;
+      //   for(int mm = 0; mm < tmp2.n_cols; mm ++)
+      //     Rcout<<tmp1[mm]<<" ";
+      //
+      //   Rcout<<std::endl;
+      //   Rcout<<std::endl;
+      //   Rcout<<std::endl;
+      //
+      //   Rcout<<std::endl;
+
+        if(i == j) {
+          betabeta += trans(tmp1) * tmp2;
+        } else
+          betabeta += 2.0 * trans(tmp1) * tmp2;
 
 
     }
 
-
-
-    // now dis will be e[xy]
-    // num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
-
-    // acquire e[x]e[y]
-
-    // calculate the stuff for the 3 correction things
-
-    // kill yourself gently
-
   }
 
+  return Rcpp::List::create(Rcpp::Named("betabeta") = betabeta,
+                            Rcpp::Named("betalambda") = betalambda,
+                            Rcpp::Named("lambdalambda") = lambdalambda);
 
-  return 0;
+  //return 0;
 
 
   //

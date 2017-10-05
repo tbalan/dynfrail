@@ -163,7 +163,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
   z_elp <- exp(lp)
   elp = exp(lp)  / exp(logz)
 
-  browser()
+  # browser()
 
 
   if(length(Xmat)>0) {
@@ -245,11 +245,12 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
   ez <- lapply(Estep, function(x) -x[1:(length(x) - 2)] / x[length(x) - 1])
 
 
-  id <- 2
+  id <- 1
 
   browser()
+  tev
 
-  Vcov_adj_id4(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
+  puya <- Vcov_adj_id5(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
            aalpha = pars$aalpha,
            ggamma = pars$ggamma, dist = 0,
            pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda,
@@ -257,7 +258,28 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
            xelph = as.matrix(rows_x_elp_H0[[id]]),
            tau = as.matrix(rows_tau[[id]]),
            interval_rows = interval_rows[[id]],
-           ez = ez[[id]])
+           ez = ez[[id]],
+           n_times = length(tev))
+
+  as.matrix(rows_x_elp_H0[[id]])
+
+
+
+  sum()
+  str(puya)
+
+  puya$betabeta
+  puya$betalambda
+
+  rows_x_elp_H0[[id]]
+
+  a <- as.matrix(apply(rows_x_elp_H0[[id]][1:3,],2,sum))
+  b <- as.matrix(rows_x_elp_H0[[id]][4,,drop=FALSE])
+  cc <- as.matrix(apply(rows_x_elp_H0[[id]][5:6,],2,sum))
+
+  puya$betalambda
+
+  puya$lambdalambda
 
   if(!isTRUE(return_loglik)) {
     return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz))
