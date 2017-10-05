@@ -261,11 +261,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
            ez = ez[[id]],
            n_times = length(tev))
 
-  as.matrix(rows_x_elp_H0[[id]])
 
-
-
-  sum()
   str(puya)
 
   puya$betabeta
@@ -276,6 +272,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
   a <- as.matrix(apply(rows_x_elp_H0[[id]][1:3,],2,sum))
   b <- as.matrix(rows_x_elp_H0[[id]][4,,drop=FALSE])
   cc <- as.matrix(apply(rows_x_elp_H0[[id]][5:6,],2,sum))
+
 
   puya$betalambda
 
