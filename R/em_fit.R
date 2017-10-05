@@ -224,10 +224,10 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
   # todo: add cluster into the atrisk (or not who cares)
   cluster_id <- rep(1:length(atrisk$times_incluster), sapply(atrisk$interval_incluster, length))
 
-  rows_tau <- split(data.frame(tau1, tau2), cluster_id)
+  rows_tau <- lapply(split(data.frame(tau1, tau2), cluster_id), as.matrix)
   rows_elp <- split(elp, cluster_id)
 
-  rows_x_elp_H0 <- split(as.data.frame(Xmat * elp * cumhaz_line), cluster_id)
+  rows_x_elp_H0 <- lapply(split(as.data.frame(Xmat * elp * cumhaz_line), cluster_id), as.matrix)
 
 
   # within each individual, for each interval which lines are contained within that interval
@@ -261,7 +261,21 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
            ez = ez[[id]],
            n_times = length(tev))
 
+  rows_x_elp_H0
 
+
+  puya <- Vcov_adj(events = atrisk$events_incluster,
+                       cvec = c_vecs,
+                       aalpha = pars$aalpha,
+                       ggamma = pars$ggamma, dist = 0,
+                       pvfm = -1/2, times = atrisk$times_incluster, llambda = pars$llambda,
+                       elp = rows_elp,
+                       xelph = rows_x_elp_H0,
+                       tau = rows_tau,
+                       interval_rows = interval_rows,
+                       ez = ez,
+                       n_times = length(tev),
+                       n_covs = ncol(Xmat))
   str(puya)
 
   puya$betabeta

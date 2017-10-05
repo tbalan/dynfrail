@@ -4,7 +4,7 @@
 
 using namespace Rcpp;
 
-double g(const double& llambda, NumericVector& time, const int& pos1, const int& pos2) {
+double g(const double& llambda, const NumericVector& time, const int& pos1, const int& pos2) {
   double res = 0;
 
   int max2 = 0;
@@ -97,9 +97,9 @@ double psi(const int &dist, const double &pvfm, const double &ggamma, const int 
 }
 
 // logic: S takes all sums of cvec on positions containing {left right}
-double S(int& deriv, int& left, int& right, double& ggamma,
-         int& dist, double& pvfm,
-         NumericVector& times, double& llambda, NumericVector& cvec) {
+double S(const int& deriv, const int& left, const int& right, const double& ggamma,
+         const int& dist, const double& pvfm,
+         const NumericVector& times, const double& llambda, const NumericVector& cvec) {
 
   double res = 0.0;
 
@@ -115,8 +115,8 @@ double S(int& deriv, int& left, int& right, double& ggamma,
 
 
 
-double divideSum(std::vector<int> &events, NumericVector &cvec, double &aalpha, double &ggamma,
-               int &dist, double &pvfm, NumericVector &times, double &llambda) {
+double divideSum(const std::vector<int> &events, const NumericVector &cvec, const double &aalpha, const double &ggamma,
+               const int &dist, const double &pvfm, const NumericVector &times, const double &llambda) {
 
   int n = events.size();
   if(n==0) return 1.0;
@@ -379,21 +379,31 @@ int Vcov_adj_id2(NumericVector events, NumericVector cvec, double aalpha, double
 
 
 // [[Rcpp::export]]
-List Vcov_adj_id5(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
-                 int dist, double pvfm, NumericVector times, double llambda,
-                 NumericVector elp,
-                 const arma::mat& xelph,
-                 const arma::mat& tau,
-                 Rcpp::List interval_rows,
-                 NumericVector ez,
-                 int n_times) {
+void Vcov_adj_id4(const NumericVector &events,
+                  const NumericVector &cvec,
+                  const double &aalpha,
+                  const double &ggamma,
+                  const int &dist,
+                  const double &pvfm,
+                  const NumericVector &times,
+                  const double &llambda,
+                  const NumericVector& elp,
+                  const arma::mat &xelph,
+                  const arma::mat &tau,
+                  const Rcpp::List &interval_rows,
+                  const NumericVector &ez,
+                  const int &n_times,
+                  arma::mat &betabeta, // this will get modified
+                  std::vector<double> &lambdalambda, // this will get modified
+                  arma::mat &betalambda // this will get modified
+                 ) {
 
   //define the outputs
 
   //arma::mat betabeta = arma::mat(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
-  arma::mat betabeta(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
-  std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
-  arma::mat betalambda(n_times, xelph.n_cols, arma::fill::zeros);
+  // arma::mat betabeta(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
+  // std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
+  // arma::mat betalambda(n_times, xelph.n_cols, arma::fill::zeros);
 
   // Rcout<<betabeta.n_rows<< " x "<<betabeta.n_cols;
 
@@ -514,9 +524,9 @@ List Vcov_adj_id5(NumericVector events, NumericVector cvec, double aalpha, doubl
 
   }
 
-  return Rcpp::List::create(Rcpp::Named("betabeta") = betabeta,
-                            Rcpp::Named("betalambda") = betalambda,
-                            Rcpp::Named("lambdalambda") = lambdalambda);
+  // return Rcpp::List::create(Rcpp::Named("betabeta") = betabeta,
+  //                           Rcpp::Named("betalambda") = betalambda,
+  //                           Rcpp::Named("lambdalambda") = lambdalambda);
 
   //return 0;
 
@@ -552,7 +562,65 @@ List Vcov_adj_id5(NumericVector events, NumericVector cvec, double aalpha, doubl
 }
 
 
+// [[Rcpp::export]]
+List Vcov_adj(List events_l,
+              List cvec_l,
+              double aalpha, double ggamma, int dist, double pvfm,
+              List times_l,
+              double llambda,
+              List elp_l,
+              List xelph_l,
+              List tau_l,
+              List interval_rows_l,
+              List ez_l,
+              int n_times,
+              int n_covs) {
 
+  // outcome
+
+  arma::mat betabeta(n_covs, n_covs, arma::fill::zeros);
+  std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
+  arma::mat betalambda(n_times, n_covs, arma::fill::zeros);
+
+  Rcout<<"I am IN";
+
+
+
+    // Vcov_adj_id4(events_l[1],
+    //               cvec_l[1],
+    //               aalpha, ggamma, dist, pvfm,
+    //               times_l[1], llambda,
+    //               elp_l[1],
+    //               xelph_l[1],
+    //               tau_l[1],
+    //               interval_rows_l[1],
+    //               ez_l[1],
+    //               n_times,
+    //               betabeta,
+    //               lambdalambda,
+    //               betalambda);
+
+    for(int indiv = 0; indiv < events_l.size(); indiv++)
+      Vcov_adj_id4(events_l[indiv],
+                  cvec_l[indiv],
+                  aalpha, ggamma, dist, pvfm,
+                  times_l[indiv], llambda,
+                  elp_l[indiv],
+                  xelph_l[indiv],
+                  tau_l[indiv],
+                  interval_rows_l[indiv],
+                  ez_l[indiv],
+                  n_times,
+                  betabeta,
+                  lambdalambda,
+                  betalambda);
+
+
+    return Rcpp::List::create(Rcpp::Named("betabeta") = betabeta,
+                              Rcpp::Named("betalambda") = betalambda,
+                              Rcpp::Named("lambdalambda") = lambdalambda);
+
+}
 /*** R
 set.seed(1)
 # Last one is the denominator
