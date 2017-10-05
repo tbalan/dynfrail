@@ -433,8 +433,19 @@ int Vcov_adj_id4(NumericVector events, NumericVector cvec, double aalpha, double
 
       for(std::vector<int>::iterator l1 = int_rows[i-1].begin(); l1 != int_rows[i-1].end(); l1++)
         for(std::vector<int>::iterator l2 = int_rows[j-1].begin(); l2 != int_rows[j-1].end(); l2++) {
+
           Rcout<<*l1<<" "<<*l2<<" /// ";
-          // add up the corresponding rows of xelph and xelph into two vectors
+          Rcout<<"["<<tau(*l1-1, 0)<<", "<<tau(*l1-1, 1)<<"] // ";
+          Rcout<<"["<<tau(*l2-1, 0)<<", "<<tau(*l2-1, 1)<<"] //";
+
+          Rcout<<std::endl;
+
+          for(int p = tau(*l1 - 1, 0); p < tau(*l1 - 1, 1); p++)  {
+            // betalambda should be a (beta) x (lambda) kind of matrix
+            // betalambda[,p] += xepph2[,l1]
+          }
+
+                    // add up the corresponding rows of xelph and xelph into two vectors
           // for p in tau[l1] {
                 // add at row (p) elp[l1]  * xelph[l2]
                 //  for q in tau[l2] add at (p,q) elp[p] * elp[q]

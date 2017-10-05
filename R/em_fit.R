@@ -249,7 +249,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   browser()
 
-  Vcov_adj_id3(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
+  Vcov_adj_id4(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
            aalpha = pars$aalpha,
            ggamma = pars$ggamma, dist = 0,
            pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda,
