@@ -274,112 +274,7 @@ NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, 
 
 }
 
-
-// [[Rcpp::export]]
-int Vcov_adj_id2(NumericVector events, NumericVector cvec, double aalpha, double ggamma,
-                       int dist, double pvfm, NumericVector times, double llambda,
-                       NumericVector elp,
-                       NumericMatrix xelph,
-                       NumericMatrix tau,
-                       Rcpp::List interval_rows,
-                       NumericVector ez) {
-
-  //define the outputs
-  //for (beta, beta) it will be a 2x2 matrix
-
-  //for lambda lambda it will have to be a
-
-  // make the List into a vector of vectors
-  std::vector<std::vector<int> > int_rows(interval_rows.size());
-
-  for(int i = 0; i<interval_rows.size(); i++) {
-    Rcpp::NumericVector s1(interval_rows[i]);
-    int_rows[i] = std::vector<int>(s1.begin(), s1.end());
-  }
-
-  std::vector<int> events_add(events.begin(), events.end());
-
-  double denom = divideSum(events_add, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
-
-  // For each interval
-  for(int i = 1; i<= cvec.size(); i++) {
-
-
-    // the vector of events; this is from 1 to L
-    std::vector<int> newvec = events_add;
-
-    std::vector<int>::iterator pos = std::upper_bound(newvec.begin(), newvec.end(), i);
-
-    newvec.insert(pos, i);
-
-    for(int j = i; j<= cvec.size(); j++) {
-
-      std::vector<int> newvec2 = newvec;
-
-      std::vector<int>::iterator pos2 = std::upper_bound(newvec2.begin(), newvec2.end(), j);
-
-      newvec2.insert(pos2, j);
-
-      //e[z1z2]
-      double exy_exey = divideSum(newvec2, cvec, aalpha, ggamma, dist, pvfm, times, llambda)/denom - ez[i-1] * ez[j-1];
-
-      //get e[z1], e[z2] ?!?
-
-
-
-    }
-
-
-
-    // now dis will be e[xy]
-    // num.push_back(divideSum(newvec, cvec, aalpha, ggamma, dist, pvfm, times, llambda));
-
-    // acquire e[x]e[y]
-
-    // calculate the stuff for the 3 correction things
-
-    // kill yourself gently
-
-  }
-
-
-  return 0;
-
-
-  //
-  // NumericVector out(num.begin(), num.end());
-  //
-  // out.push_back(denom);
-  //
-  //
-  // // Also add the log-Laplace transform
-  // double logLaplace = 0.0;
-  //
-  // // Rcout<<"cvec size: "<<cvec.size()<<" times size "<<times.size();
-  // // Rcout<<std::endl;
-  //
-  // for(unsigned int i = 0; i < cvec.size(); i++)
-  //   for(unsigned int j = i; j < cvec.size(); j++) {
-  //
-  //     double ck1k2 = std::accumulate(cvec.begin() + i, cvec.begin() + j + 1, 0.0);
-  //     logLaplace += psi(dist, pvfm, ggamma, 0, ck1k2) * g(llambda, times, i, j);
-  //     // Rcout<<"("<<i + 1<<" "<<j + 1<<")="<<g(llambda, times, i, j)<<" / ";
-  //
-  //     // Rcout<<p;
-  //   }
-  //
-  //   logLaplace *= (-1) * aalpha;
-  //
-  // out.push_back(logLaplace);
-  //
-  // return out;
-
-}
-
-
-
-// [[Rcpp::export]]
-void Vcov_adj_id4(const NumericVector &events,
+void Vcov_adj_id(const NumericVector &events,
                   const NumericVector &cvec,
                   const double &aalpha,
                   const double &ggamma,
@@ -467,23 +362,30 @@ void Vcov_adj_id4(const NumericVector &events,
           // Rcout<<std::endl;
 
           for(int p = tau(*l1 - 1, 0); p < tau(*l1 - 1, 1); p++)  {
+
+            // when i!=j this would normally get added twice
             if(i == j) {
-              betalambda.row(p) += elp[*l1-1] * xelph.row(*l2-1);
+              betalambda.row(p) += exy_exey * elp[*l1-1] * xelph.row(*l2-1);
             } else
-              betalambda.row(p) += 2.0 * elp[*l1-1] * xelph.row(*l2-1);
+              betalambda.row(p) += 2.0 * exy_exey * elp[*l1-1] * xelph.row(*l2-1);
 
 
             for(int q = tau(*l2 -1, 0); q < tau(*l2 - 1, 1); q++)
-              if(p <= q)
+              // this is a dumb thing: I only care for unique combinations of (p,q) since the matrix is symmetric
+              // I don't know this in advance so I loop through the whole thing...
+              // if i != j then that would get added twice, I make this explicit
+              if(p <= q) {
                 if (i==j) {
-                  lambdalambda[n_times * p - p * (p+1)/2 + q] += elp[*l1-1] * elp[*l2-1];
+                  lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * elp[*l1-1] * elp[*l2-1];
                 } else {
-                  lambdalambda[n_times * p - p * (p+1)/2 + q] += 2 * elp[*l1-1] * elp[*l2-1];
+                  lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * 2.0 * elp[*l1-1] * elp[*l2-1];
                 }
+              }
+
 
           }
 
-          // this one must be added just once
+          // this must be added just once; I loop through these values more times unfortunately
           if(l1 == int_rows[i-1].begin()) {
             tmp2 += xelph.row(*l2 - 1);
             // Rcout<<"add line "<<*l2<<" to tmp2";
@@ -497,68 +399,15 @@ void Vcov_adj_id4(const NumericVector &events,
 
       }
 
-      // Rcout<<std::endl<<" ======== "<<std::endl;
-      // Rcout<<"i = "<<i<<", j = "<<j<<std::endl;
-      //
-      //   Rcout<<"tmp1"<<std::endl;
-      //   for(int mm = 0; mm < tmp1.n_cols; mm ++)
-      //     Rcout<<tmp1[mm]<<" ";
-      //   Rcout<<std::endl;
-      //   Rcout<<"tmp2"<<std::endl;
-      //   for(int mm = 0; mm < tmp2.n_cols; mm ++)
-      //     Rcout<<tmp1[mm]<<" ";
-      //
-      //   Rcout<<std::endl;
-      //   Rcout<<std::endl;
-      //   Rcout<<std::endl;
-      //
-      //   Rcout<<std::endl;
-
         if(i == j) {
-          betabeta += trans(tmp1) * tmp2;
+          betabeta += exy_exey * trans(tmp1) * tmp2;
         } else
-          betabeta += 2.0 * trans(tmp1) * tmp2;
+          betabeta += 2.0 * exy_exey * trans(tmp1) * tmp2;
 
 
     }
 
   }
-
-  // return Rcpp::List::create(Rcpp::Named("betabeta") = betabeta,
-  //                           Rcpp::Named("betalambda") = betalambda,
-  //                           Rcpp::Named("lambdalambda") = lambdalambda);
-
-  //return 0;
-
-
-  //
-  // NumericVector out(num.begin(), num.end());
-  //
-  // out.push_back(denom);
-  //
-  //
-  // // Also add the log-Laplace transform
-  // double logLaplace = 0.0;
-  //
-  // // Rcout<<"cvec size: "<<cvec.size()<<" times size "<<times.size();
-  // // Rcout<<std::endl;
-  //
-  // for(unsigned int i = 0; i < cvec.size(); i++)
-  //   for(unsigned int j = i; j < cvec.size(); j++) {
-  //
-  //     double ck1k2 = std::accumulate(cvec.begin() + i, cvec.begin() + j + 1, 0.0);
-  //     logLaplace += psi(dist, pvfm, ggamma, 0, ck1k2) * g(llambda, times, i, j);
-  //     // Rcout<<"("<<i + 1<<" "<<j + 1<<")="<<g(llambda, times, i, j)<<" / ";
-  //
-  //     // Rcout<<p;
-  //   }
-  //
-  //   logLaplace *= (-1) * aalpha;
-  //
-  // out.push_back(logLaplace);
-  //
-  // return out;
-
 }
 
 
@@ -582,7 +431,7 @@ List Vcov_adj(List events_l,
   std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
   arma::mat betalambda(n_times, n_covs, arma::fill::zeros);
 
-  Rcout<<"I am IN";
+  // Rcout<<"I am IN";
 
 
 
@@ -601,7 +450,7 @@ List Vcov_adj(List events_l,
     //               betalambda);
 
     for(int indiv = 0; indiv < events_l.size(); indiv++)
-      Vcov_adj_id4(events_l[indiv],
+      Vcov_adj_id(events_l[indiv],
                   cvec_l[indiv],
                   aalpha, ggamma, dist, pvfm,
                   times_l[indiv], llambda,

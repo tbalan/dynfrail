@@ -194,22 +194,21 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   Imat <- matrix(0, ncol(Xmat) + length(tev), ncol(Xmat) + length(tev))
 
-  if(!is.null(mcox$coefficients)) {
-    Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
-    Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
-    Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
-  }
-
-  Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
+  # if(!is.null(mcox$coefficients)) {
+  #   Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
+  #   Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
+  #   Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
+  # }
+  #
+  # Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
 
   # This is d/dg
 
-  dl1_dg <- apply(Xmat * Y[,3], 2, sum)
-
-  dl2_dg <- apply(Xmat  * z_elp * cumhaz_line, 2, sum)
-
-
-  dl1_dl <- sum(nev_tp / haz_tev)
+  # dl1_dg <- apply(Xmat * Y[,3], 2, sum)
+  #
+  # dl2_dg <- apply(Xmat  * z_elp * cumhaz_line, 2, sum)
+  #
+  # dl1_dl <- sum(nev_tp / haz_tev)
 
   # all this stuff is 0 in the end, isn't it?
 
@@ -235,36 +234,11 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
     lapply(unique(x), function(y) which(y==x))
   })
 
-  length(rows_tau)
-  length(interval_rows)
-  length(rows_elp)
-  length(rows_x_elp_H0)
-
   # Now to make sum calculations
 
   ez <- lapply(Estep, function(x) -x[1:(length(x) - 2)] / x[length(x) - 1])
 
-
-  id <- 1
-
-  browser()
-  tev
-
-  puya <- Vcov_adj_id5(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
-           aalpha = pars$aalpha,
-           ggamma = pars$ggamma, dist = 0,
-           pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda,
-           elp = rows_elp[[id]],
-           xelph = as.matrix(rows_x_elp_H0[[id]]),
-           tau = as.matrix(rows_tau[[id]]),
-           interval_rows = interval_rows[[id]],
-           ez = ez[[id]],
-           n_times = length(tev))
-
-  rows_x_elp_H0
-
-
-  puya <- Vcov_adj(events = atrisk$events_incluster,
+  Iloss <- Vcov_adj(events = atrisk$events_incluster,
                        cvec = c_vecs,
                        aalpha = pars$aalpha,
                        ggamma = pars$ggamma, dist = 0,
@@ -276,24 +250,30 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                        ez = ez,
                        n_times = length(tev),
                        n_covs = ncol(Xmat))
-  str(puya)
-
-  puya$betabeta
-  puya$betalambda
-
-  rows_x_elp_H0[[id]]
-
-  a <- as.matrix(apply(rows_x_elp_H0[[id]][1:3,],2,sum))
-  b <- as.matrix(rows_x_elp_H0[[id]][4,,drop=FALSE])
-  cc <- as.matrix(apply(rows_x_elp_H0[[id]][5:6,],2,sum))
 
 
-  puya$betalambda
+  if(!is.null(mcox$coefficients)) {
+    Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg + Iloss$betabeta
+    Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg) + t(Iloss$betalambda)
+    Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg + Iloss$betalambda
+  }
 
-  puya$lambdalambda
+  # make it into matrix
+  # https://stackoverflow.com/questions/37615790/indexing-the-elements-of-a-matrix-in-r
+
+  Triangle1 <- function(k,n) {
+    y <- -n
+    r <- rep(0.0,n)
+    t(vapply(1:n, function(x) {y <<- y+n+2L-x; c(rep(0L,x-1L),k[y:(y+n-x)])}, r))
+  }
+
+  Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh + Triangle1(Iloss$lambdalambda, length(nev_tp))
+
+  se <- try(sqrt(diag(solve(Imat))))
+
 
   if(!isTRUE(return_loglik)) {
-    return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz))
+    return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz, se = se))
 
   }
 
