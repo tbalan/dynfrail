@@ -1,7 +1,7 @@
 Package: dynfrail
 Type: Package
 Title: Fitting dynamic frailty models with the EM algorithm
-Version: 0.2.0
+Version: 0.3.0
 Author: Theodor Adrian Balan
 Maintainer: Theodor Adrian Balan <t.a.balan@lumc.nl>
 Description: Fits dynamic frailty models... kind of
@@ -20,5 +20,6 @@ Collate:
     'dynfrail.R'
     'dynfrail_arguments.R'
     'hello.R'
+    'print.dynfrail.R'
     'test_models.R'
     'testing.R'

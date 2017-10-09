@@ -24,33 +24,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// Vcov_adj_id2
-int Vcov_adj_id2(NumericVector events, NumericVector cvec, double aalpha, double ggamma, int dist, double pvfm, NumericVector times, double llambda, NumericVector elp, NumericMatrix xelph, NumericMatrix tau, Rcpp::List interval_rows, NumericVector ez);
-RcppExport SEXP _dynfrail_Vcov_adj_id2(SEXP eventsSEXP, SEXP cvecSEXP, SEXP aalphaSEXP, SEXP ggammaSEXP, SEXP distSEXP, SEXP pvfmSEXP, SEXP timesSEXP, SEXP llambdaSEXP, SEXP elpSEXP, SEXP xelphSEXP, SEXP tauSEXP, SEXP interval_rowsSEXP, SEXP ezSEXP) {
+// Vcov_adj
+List Vcov_adj(List events_l, List cvec_l, double aalpha, double ggamma, int dist, double pvfm, List times_l, double llambda, List elp_l, List xelph_l, List tau_l, List interval_rows_l, List ez_l, int n_times, int n_covs);
+RcppExport SEXP _dynfrail_Vcov_adj(SEXP events_lSEXP, SEXP cvec_lSEXP, SEXP aalphaSEXP, SEXP ggammaSEXP, SEXP distSEXP, SEXP pvfmSEXP, SEXP times_lSEXP, SEXP llambdaSEXP, SEXP elp_lSEXP, SEXP xelph_lSEXP, SEXP tau_lSEXP, SEXP interval_rows_lSEXP, SEXP ez_lSEXP, SEXP n_timesSEXP, SEXP n_covsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type events(eventsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type cvec(cvecSEXP);
+    Rcpp::traits::input_parameter< List >::type events_l(events_lSEXP);
+    Rcpp::traits::input_parameter< List >::type cvec_l(cvec_lSEXP);
     Rcpp::traits::input_parameter< double >::type aalpha(aalphaSEXP);
     Rcpp::traits::input_parameter< double >::type ggamma(ggammaSEXP);
     Rcpp::traits::input_parameter< int >::type dist(distSEXP);
     Rcpp::traits::input_parameter< double >::type pvfm(pvfmSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type times(timesSEXP);
+    Rcpp::traits::input_parameter< List >::type times_l(times_lSEXP);
     Rcpp::traits::input_parameter< double >::type llambda(llambdaSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type elp(elpSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type xelph(xelphSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type tau(tauSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type interval_rows(interval_rowsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type ez(ezSEXP);
-    rcpp_result_gen = Rcpp::wrap(Vcov_adj_id2(events, cvec, aalpha, ggamma, dist, pvfm, times, llambda, elp, xelph, tau, interval_rows, ez));
+    Rcpp::traits::input_parameter< List >::type elp_l(elp_lSEXP);
+    Rcpp::traits::input_parameter< List >::type xelph_l(xelph_lSEXP);
+    Rcpp::traits::input_parameter< List >::type tau_l(tau_lSEXP);
+    Rcpp::traits::input_parameter< List >::type interval_rows_l(interval_rows_lSEXP);
+    Rcpp::traits::input_parameter< List >::type ez_l(ez_lSEXP);
+    Rcpp::traits::input_parameter< int >::type n_times(n_timesSEXP);
+    Rcpp::traits::input_parameter< int >::type n_covs(n_covsSEXP);
+    rcpp_result_gen = Rcpp::wrap(Vcov_adj(events_l, cvec_l, aalpha, ggamma, dist, pvfm, times_l, llambda, elp_l, xelph_l, tau_l, interval_rows_l, ez_l, n_times, n_covs));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_dynfrail_Estep_id", (DL_FUNC) &_dynfrail_Estep_id, 8},
-    {"_dynfrail_Vcov_adj_id2", (DL_FUNC) &_dynfrail_Vcov_adj_id2, 13},
+    {"_dynfrail_Vcov_adj", (DL_FUNC) &_dynfrail_Vcov_adj, 15},
     {NULL, NULL, 0}
 };
 

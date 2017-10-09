@@ -5,7 +5,7 @@ Estep_id <- function(events, cvec, aalpha, ggamma, dist, pvfm, times, llambda) {
     .Call(`_dynfrail_Estep_id`, events, cvec, aalpha, ggamma, dist, pvfm, times, llambda)
 }
 
-Vcov_adj_id2 <- function(events, cvec, aalpha, ggamma, dist, pvfm, times, llambda, elp, xelph, tau, interval_rows, ez) {
-    .Call(`_dynfrail_Vcov_adj_id2`, events, cvec, aalpha, ggamma, dist, pvfm, times, llambda, elp, xelph, tau, interval_rows, ez)
+Vcov_adj <- function(events_l, cvec_l, aalpha, ggamma, dist, pvfm, times_l, llambda, elp_l, xelph_l, tau_l, interval_rows_l, ez_l, n_times, n_covs) {
+    .Call(`_dynfrail_Vcov_adj`, events_l, cvec_l, aalpha, ggamma, dist, pvfm, times_l, llambda, elp_l, xelph_l, tau_l, interval_rows_l, ez_l, n_times, n_covs)
 }
 

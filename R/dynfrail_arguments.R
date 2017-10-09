@@ -32,7 +32,7 @@
 dynfrail_control <- function(opt_fit = TRUE,
                             se = TRUE,
                             se_adj = TRUE,
-                            nlm_control = list(),
+                            nlm_control = list(stepmax = 1),
                             inner_control = list(eps = 0.0001,
                                                  maxit = 100,
                                                  verbose = TRUE,

@@ -5,8 +5,8 @@
 \title{Control parameters for dynfrail}
 \usage{
 dynfrail_control(opt_fit = TRUE, se = TRUE, se_adj = TRUE,
-  nlm_control = list(), inner_control = list(eps = 1e-04, maxit = 100,
-  verbose = TRUE, lik_tol = 1))
+  nlm_control = list(stepmax = 1), inner_control = list(eps = 1e-04, maxit =
+  100, verbose = TRUE, lik_tol = 1))
 }
 \arguments{
 \item{opt_fit}{Logical. Whether the outer optimization should be carried out.

@@ -221,10 +221,38 @@ dynfrail <- function(formula, data,
          pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
          mcox =list(coefficients = g, loglik = mcox$loglik),
          c_vecs = c_vecs,
-         se = FALSE,
+         se = TRUE,
          inner_control = control$inner_control,
          return_loglik = FALSE)
-  list(outer_m = outer_m, inner_m = inner_m)
 
+  res <- list(coefficients = inner_m$coef,
+              hazard = inner_m$haz,
+              imat = inner_m$Imat,
+              logtheta = outer_m$estimate[1],
+              loglambda = outer_m$estimate[2],
+              var_logtheta = NA,
+              ci_logtheta = NA,
+              var_loglambda = NA,
+              ci_loglambda = NA,
+              frail_id = data.frame(id = df_dynfrail$id_,
+                                    interval = df_dynfrail$interval_,
+                                    Y,
+                                    frail = inner_m$frail),
+              residuals = NA,
+              tev = inner_m$tev,
+              loglik = c(mcox$loglik[length(mcox$loglik)], -outer_m$minimum),
+              formula = formula,
+              distribution = distribution,
+              control = control,
+              nobs = NA,
+              fitted = NA,
+              mf = NA,
+              mm = NA)
+
+  attr(res, "call") <-  Call
+  attr(res, "class") <- "dynfrail"
+
+
+  res
 
   }

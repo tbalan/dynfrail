@@ -194,23 +194,6 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   Imat <- matrix(0, ncol(Xmat) + length(tev), ncol(Xmat) + length(tev))
 
-  # if(!is.null(mcox$coefficients)) {
-  #   Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
-  #   Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
-  #   Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
-  # }
-  #
-  # Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
-
-  # This is d/dg
-
-  # dl1_dg <- apply(Xmat * Y[,3], 2, sum)
-  #
-  # dl2_dg <- apply(Xmat  * z_elp * cumhaz_line, 2, sum)
-  #
-  # dl1_dl <- sum(nev_tp / haz_tev)
-
-  # all this stuff is 0 in the end, isn't it?
 
   # Here the idea is to use indices instead of event times.
   # if tau1 = 0 and tau2 = 10, this means that the event time points for which that at risk
@@ -269,15 +252,17 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh + Triangle1(Iloss$lambdalambda, length(nev_tp))
 
-  se <- try(sqrt(diag(solve(Imat))))
+  # se <- try(solve(Imat))
 
 
   if(!isTRUE(return_loglik)) {
-    return(list(mcox = mcox, frail = exp(logz), cumhaz = cumhaz, se = se))
-
+    return(list(loglik = loglik,
+                tev = tev,
+                haz = haz_tev,
+                frail = exp(logz),
+                coef = mcox$coefficients,
+                Imat = Imat))
   }
-
-
 
 }
 
