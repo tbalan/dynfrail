@@ -2,14 +2,16 @@
 #'
 #'
 #' @include em_fit.R
-#' @importFrom survival Surv
+#' @importFrom survival Surv survSplit
 #' @importFrom magrittr "%>%"
 #' @importFrom Rcpp evalCpp
 #' @importFrom tibble rownames_to_column
 #' @importFrom tidyr separate
-#' @importFrom dplyr arrange
+#' @importFrom dplyr arrange_
+#' @importFrom stats nlm drop.terms model.frame quantile terms model.matrix
 #' @useDynLib dynfrail, .registration=TRUE
 #' @include dynfrail_aux.R
+#' @include em_fit.R
 #'
 #' @param formula A formula that contains on the left hand side an object of the type \code{Surv}
 #' and on the right hand side a \code{+cluster(id)} statement. Optionally, also a \code{+terminal()} statement
@@ -18,22 +20,39 @@
 #' @param data A data frame in which the formula argument can be evaluated
 #' @param distribution An object as created by \code{\link{dynfrail_dist}}
 #' @param control An object as created by \code{\link{dynfrail_control}}
-#' @param model Logical. Should the model frame be returned?
-#' @param model.matrix Logical. Should the model matrix be returned?
 #' @param ... Other arguments, currently used to warn about deprecated argument names
 #' @export
 #'
-#' @return
+#' @return A \code{dynfrail} object that contains the following fields:
+#' \item{coefficients}{A named vector of the estimated regression coefficients}
+#' \item{hazard}{The breslow estimate of the baseline hazard at each event time point, in chronological order}
+#' \item{imat}{Fisher's information matrix corresponding to the coefficients and hazard, assuming \eqn{\theta, \lambda} constant}
+#' \item{logtheta}{The point estimate of the logarithm of the frailty parameter \eqn{\theta}. See details.}
+#' \item{loglambda}{The point estimate of the logarithm of the autocorrelation parameter \eqn{\lambda}. See details.}
+#' \item{frail}{A \code{data.frame} containing the variables: \code{id} (cluster id), \code{interval} (for piecewise constant frailty, the label of the interval
+#' on which the frailty is constant), \code{Y} (a \code{Surv} object which determines a starting and a stopping time for each row), \code{frail} (the empirical
+#' Bayes estimates of the piecewise constant frailty corresponding to that specific cluster and that specific time period)}
+#' \item{tev}{The time points of the events in the data set, this is the same length as hazard}
+#' \item{loglik}{A vector of length two with the log-likelihood of the starting Cox model
+#' and the maximized log-likelihood}
+#' \item{formula}{The original formula argument}
+#' \item{distribution}{The original distribution argument}
+#' \item{control}{The original control argument}
 #' @export
 #'
 #' @examples
 dynfrail <- function(formula, data,
-                     distribution = dynfrail_distribution(),
+                     distribution = dynfrail_dist(),
                      control = dynfrail_control(),
-                     model = FALSE,
-                     model.matrix = FALSE,
                      ...)
 {
+
+
+  if(!inherits(distribution, "dynfrail_dist"))
+    stop("distribution argument misspecified; see ?dynfrail_dist()")
+
+  if(!inherits(control, "dynfrail_control"))
+    stop("control argument misspecified; see ?dynfrail_control()")
 
 
   Call <- match.call()
@@ -74,7 +93,7 @@ dynfrail <- function(formula, data,
 
   pos_id <- grep("cluster", attr(terms(formula), "term.labels"))
 
-  terms2 <- drop.terms(terms(formula), drop = pos_id, keep.response = TRUE)
+  terms2 <- drop.terms(terms(formula), dropx = pos_id, keep.response = TRUE)
 
   mf <- model.frame(terms2, df_dynfrail)
 
@@ -150,8 +169,8 @@ dynfrail <- function(formula, data,
   death_id_interval <- rowsum(Y[,3], group = atrisk$id_interval, reorder = TRUE) %>%
     as.data.frame() %>%
     tibble::rownames_to_column() %>%
-    tidyr::separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
-    dplyr::arrange(id, interval)
+    tidyr::separate("rowname", into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+    dplyr::arrange_("id", "interval")
 
   delta <- split(death_id_interval$V1, death_id_interval$id)
   intervals <- split(death_id_interval$interval, death_id_interval$id)
@@ -184,8 +203,8 @@ dynfrail <- function(formula, data,
                             reorder = TRUE) %>%
     as.data.frame()  %>%
     tibble::rownames_to_column() %>%
-    tidyr::separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
-    arrange(id, interval)
+    tidyr::separate("rowname", into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+    arrange_("id", "interval")
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
   # browser()
@@ -230,24 +249,24 @@ dynfrail <- function(formula, data,
               imat = inner_m$Imat,
               logtheta = outer_m$estimate[1],
               loglambda = outer_m$estimate[2],
-              var_logtheta = NA,
-              ci_logtheta = NA,
-              var_loglambda = NA,
-              ci_loglambda = NA,
+              # var_logtheta = NA,
+              # ci_logtheta = NA,
+              # var_loglambda = NA,
+              # ci_loglambda = NA,
               frail_id = data.frame(id = df_dynfrail$id_,
                                     interval = df_dynfrail$interval_,
                                     Y,
                                     frail = inner_m$frail),
-              residuals = NA,
+              # residuals = NA,
               tev = inner_m$tev,
               loglik = c(mcox$loglik[length(mcox$loglik)], -outer_m$minimum),
               formula = formula,
               distribution = distribution,
-              control = control,
-              nobs = NA,
-              fitted = NA,
-              mf = NA,
-              mm = NA)
+              control = control)
+              # nobs = NA,
+              # fitted = NA,
+              # mf = NA,
+              # mm = NA)
 
   attr(res, "call") <-  Call
   attr(res, "class") <- "dynfrail"

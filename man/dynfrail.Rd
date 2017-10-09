@@ -4,8 +4,8 @@
 \alias{dynfrail}
 \title{Fitting dynamic frailty models with the EM algorithm}
 \usage{
-dynfrail(formula, data, distribution = dynfrail_distribution(),
-  control = dynfrail_control(), model = FALSE, model.matrix = FALSE, ...)
+dynfrail(formula, data, distribution = dynfrail_dist(),
+  control = dynfrail_control(), ...)
 }
 \arguments{
 \item{formula}{A formula that contains on the left hand side an object of the type \code{Surv}
@@ -19,11 +19,24 @@ column is performed. See details.}
 
 \item{control}{An object as created by \code{\link{dynfrail_control}}}
 
-\item{model}{Logical. Should the model frame be returned?}
-
-\item{model.matrix}{Logical. Should the model matrix be returned?}
-
 \item{...}{Other arguments, currently used to warn about deprecated argument names}
+}
+\value{
+A \code{dynfrail} object that contains the following fields:
+\item{coefficients}{A named vector of the estimated regression coefficients}
+\item{hazard}{The breslow estimate of the baseline hazard at each event time point, in chronological order}
+\item{imat}{Fisher's information matrix corresponding to the coefficients and hazard, assuming \eqn{\theta, \lambda} constant}
+\item{logtheta}{The point estimate of the logarithm of the frailty parameter \eqn{\theta}. See details.}
+\item{loglambda}{The point estimate of the logarithm of the autocorrelation parameter \eqn{\lambda}. See details.}
+\item{frail}{A \code{data.frame} containing the variables: \code{id} (cluster id), \code{interval} (for piecewise constant frailty, the label of the interval
+on which the frailty is constant), \code{Y} (a \code{Surv} object which determines a starting and a stopping time for each row), \code{frail} (the empirical
+Bayes estimates of the piecewise constant frailty corresponding to that specific cluster and that specific time period)}
+\item{tev}{The time points of the events in the data set, this is the same length as hazard}
+\item{loglik}{A vector of length two with the log-likelihood of the starting Cox model
+and the maximized log-likelihood}
+\item{formula}{The original formula argument}
+\item{distribution}{The original distribution argument}
+\item{control}{The original control argument}
 }
 \description{
 Fitting dynamic frailty models with the EM algorithm

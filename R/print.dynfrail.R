@@ -1,4 +1,5 @@
 #' @export
+#' @importFrom stats pchisq printCoefmat
 #' @keywords internal
 print.dynfrail <- function(x, ...) {
 

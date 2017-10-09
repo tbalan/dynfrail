@@ -24,7 +24,7 @@
 #'
 #' The starting value of the outer optimization may be set in the \code{dynfrail_dist()} argument.
 #'
-#' @seealso \code{\link{emfrail}}, \code{\link{emfrail_dist}}, \code{\link{emfrail_pll}}
+#' @seealso \code{\link{dynfrail}}, \code{\link{dynfrail_dist}}
 #' @examples
 #' dynfrail_control()
 #' dynfrail_control(inner_control = list(maxit = 2))
@@ -69,27 +69,30 @@ dynfrail_control <- function(opt_fit = TRUE,
 #' Distribution parameters for dynfrail
 #'
 #' @param dist One of 'gamma', 'stable' or 'pvf'.
-#' @param theta A starting value for the 'outer' maximization with respect to the frailty parameter \eqn{\theta}. Must be >0.
-#' @param pvfm Only relevant if \code{dist = 'pvf'} is used. It determines which PVF distribution should be used. Must be  larger than -1 and not equal to 0.
-#' @param left_truncation Logical. Whether the data set represents left truncated survival times.
-#'
-#' @return An object of the type \code{emfrail_distribution}, which is mostly used to denote the
+#' @param theta Frailty distribution parameter. Must be >0.
+#' @param pvfm Only relevant if \code{dist = 'pvf'} is used. It determines which PVF distribution should be used. Must be larger than -1 and not equal to 0.
+#' @param lambda Frailty autocorrelation parameter. Must be >0.
+#' @param n_ints For piece-wise constant frailty, the number of intervals. With \code{n_ints = 0}, the classical shared frailty scenario is obtained.
+#' @param times A vector of time points which determine the piecewise-constant interval for the frailty. Overrides \code{n_ints}.
+#' @return An object of the type \code{dynfrail_dist}, which is mostly used to denote the
 #' supported frailty distributions in a consistent way.
 #' @export
 #'
 #' @details The \code{theta} argument must be positive. In the case of gamma or PVF, this is the inverse of
 #'  the frailty variance, i.e. the larger the \code{theta} is,
-#'  the closer the model is to a Cox model. For the positive stable distribution, the \eqn{\gamma} parameter of the Laplace trnasform is
+#'  the closer the model is to a Cox model. When \code{dist = "pvf"} and \code{pvfm = -0.5}, the inverse Gaussian
+#'  distribution is obtained.
+#'  For the positive stable distribution, the \eqn{\gamma} parameter of the Laplace transform is
 #'  \eqn{\theta / (1 + \theta)}, with the \eqn{alpha} parameter fixed to 1.
 #'
-#' @seealso \code{\link{emfrail}, \link{emfrail_control}}
+#' @seealso \code{\link{dynfrail}, \link{dynfrail_control}}
 #' @examples
-#' emfrail_distribution()
+#' dynfrail_dist()
 #' # Compound Poisson distribution:
-#' emfrail_distribution(dist = 'pvf', theta = 1.5, pvfm = 0.5)
+#' dynfrail_dist(dist = 'pvf', theta = 1.5, pvfm = 0.5)
 #' # Inverse Gaussian distribution:
-#' emfrail_distribution(dist = 'pvf')
-dynfrail_distribution <- function(dist = "gamma",
+#' dynfrail_dist(dist = 'pvf')
+dynfrail_dist <- function(dist = "gamma",
                                   theta = 2,
                                   pvfm = -1/2,
                                   lambda = 0.1,
@@ -107,7 +110,7 @@ dynfrail_distribution <- function(dist = "gamma",
 
   # if(!is.logical(left_truncation)) stop("left_truncation must be TRUE or FALSE")
   res <- list(dist = dist, theta = theta, pvfm = pvfm, lambda = lambda, n_ints = n_ints, times = times)
-  attr(res, "class") <- c("dynfrail_distribution")
+  attr(res, "class") <- c("dynfrail_dist")
   return(res)
 }
 

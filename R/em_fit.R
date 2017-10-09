@@ -126,8 +126,8 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                               reorder = TRUE) %>%
       as.data.frame()  %>%
       tibble::rownames_to_column() %>%
-      tidyr::separate(rowname, into = c("id", "interval"), sep = "_", convert = TRUE) %>%
-      dplyr::arrange(id, interval)
+      tidyr::separate("rowname", into = c("id", "interval"), sep = "_", convert = TRUE) %>%
+      dplyr::arrange_("id", "interval")
 
     c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
 
@@ -221,16 +221,16 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   ez <- lapply(Estep, function(x) -x[1:(length(x) - 2)] / x[length(x) - 1])
 
-  Iloss <- Vcov_adj(events = atrisk$events_incluster,
-                       cvec = c_vecs,
+  Iloss <- Vcov_adj(events_l = atrisk$events_incluster,
+                       cvec_l = c_vecs,
                        aalpha = pars$aalpha,
                        ggamma = pars$ggamma, dist = 0,
-                       pvfm = -1/2, times = atrisk$times_incluster, llambda = pars$llambda,
-                       elp = rows_elp,
-                       xelph = rows_x_elp_H0,
-                       tau = rows_tau,
-                       interval_rows = interval_rows,
-                       ez = ez,
+                       pvfm = -1/2, times_l = atrisk$times_incluster, llambda = pars$llambda,
+                       elp_l = rows_elp,
+                       xelph_l = rows_x_elp_H0,
+                       tau_l = rows_tau,
+                       interval_rows_l = interval_rows,
+                       ez_l = ez,
                        n_times = length(tev),
                        n_covs = ncol(Xmat))
 

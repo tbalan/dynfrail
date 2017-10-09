@@ -46,5 +46,5 @@ dynfrail_control(inner_control = list(maxit = 2))
 
 }
 \seealso{
-\code{\link{emfrail}}, \code{\link{emfrail_dist}}, \code{\link{emfrail_pll}}
+\code{\link{dynfrail}}, \code{\link{dynfrail_dist}}
 }
