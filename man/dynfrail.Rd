@@ -41,14 +41,14 @@ Fitting dynamic frailty models with the EM algorithm
 }
 \details{
 This function fits dynamic frailty models where the intensity of the process is described by
-\deqn{\lambda(t) = Z(t) \exp(\beta^\top x) \lamdba_0(t).} As in regular frailty models, the random effect is
+\deqn{\lambda(t) = Z(t) \exp(\beta^\top x) \lambda_0(t).} As in regular frailty models, the random effect is
 shared by observations from a cluster, or by recurrent event episodes within an individual.
 This implementation generally follows the lines of Putter & van Houwelingen (2015). The maximum likelihood
 estimates are obtained with an exact E step.
 
 \eqn{Z(t)} has two parameters: \eqn{\theta} plays the role of the spread of the frailty distribution. For the frailty distributons with finite
 variance (all except the positive stable) this is the inverse of the variance, so that 0 corresponds to infinite variance and infinity to
-variance 0. The second parameter \eqn{\lamda} determines how much variation in time is in \eqn{Z(t)}, so that
+variance 0. The second parameter \eqn{\lambda} determines how much variation in time is in \eqn{Z(t)}, so that
 \deqn{cor(Z(t_1), Z(t_2)) = exp(-\lambda (t_2 - t_1)).} Note that this heavily depends on the time scale, so
 the starting value in the \code{distribution} should reflect that.
 

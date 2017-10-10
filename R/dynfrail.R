@@ -40,14 +40,14 @@
 #' @references Putter, H., & Van Houwelingen, H. C. (2015). Dynamic frailty models based on compound birth–death processes. Biostatistics, 16(3), 550-564.
 #'
 #' @details This function fits dynamic frailty models where the intensity of the process is described by
-#' \deqn{\lambda(t) = Z(t) \exp(\beta^\top x) \lamdba_0(t).} As in regular frailty models, the random effect is
+#' \deqn{\lambda(t) = Z(t) \exp(\beta^\top x) \lambda_0(t).} As in regular frailty models, the random effect is
 #' shared by observations from a cluster, or by recurrent event episodes within an individual.
 #' This implementation generally follows the lines of Putter & van Houwelingen (2015). The maximum likelihood
 #' estimates are obtained with an exact E step.
 #'
 #' \eqn{Z(t)} has two parameters: \eqn{\theta} plays the role of the spread of the frailty distribution. For the frailty distributons with finite
 #' variance (all except the positive stable) this is the inverse of the variance, so that 0 corresponds to infinite variance and infinity to
-#' variance 0. The second parameter \eqn{\lamda} determines how much variation in time is in \eqn{Z(t)}, so that
+#' variance 0. The second parameter \eqn{\lambda} determines how much variation in time is in \eqn{Z(t)}, so that
 #' \deqn{cor(Z(t_1), Z(t_2)) = exp(-\lambda (t_2 - t_1)).} Note that this heavily depends on the time scale, so
 #' the starting value in the \code{distribution} should reflect that.
 #'
@@ -139,7 +139,7 @@ dynfrail <- function(formula, data,
   mf <- model.frame(terms2, df_dynfrail)
 
   Y <- mf[[1]]
-  if(nrow(Y) != 3) {
+  if(ncol(Y) != 3) {
     Y <- Surv(df_dynfrail$tstart, Y[,1], Y[,2])
   }
   # get the model matrix
@@ -297,8 +297,10 @@ dynfrail <- function(formula, data,
               # ci_loglambda = NA,
               frail_id = data.frame(id = df_dynfrail$id_,
                                     interval = df_dynfrail$interval_,
-                                    Y,
-                                    frail = inner_m$frail),
+                                    frail = inner_m$frail,
+                                    tstart = Y[,1],
+                                    tstop = Y[,2],
+                                    status = Y[,3]),
               # residuals = NA,
               tev = inner_m$tev,
               loglik = c(mcox$loglik[length(mcox$loglik)], -outer_m$minimum),

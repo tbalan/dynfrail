@@ -77,7 +77,7 @@ dynfrail_prep <- function(formula, data,
   mf <- model.frame(terms2, df_dynfrail)
 
   Y <- mf[[1]]
-  if(nrow(Y) != 3) {
+  if(ncol(Y) != 3) {
     Y <- Surv(df_dynfrail$tstart, Y[,1], Y[,2])
   }
   # get the model matrix

@@ -1,6 +1,6 @@
 Package: dynfrail
 Type: Package
-Title: Fitting dynamic frailty models with the EM algorithm
+Title: Fitting Dynamic Frailty Models with the EM Algorithm
 Version: 0.3.4
 Author: Theodor Adrian Balan
 Maintainer: Theodor Adrian Balan <t.a.balan@lumc.nl>
@@ -15,7 +15,7 @@ Imports:
     tibble,
     dplyr,
     tidyr
-Suggest:
+Suggests:
     frailtyEM
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
