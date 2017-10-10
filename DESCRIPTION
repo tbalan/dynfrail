@@ -1,7 +1,7 @@
 Package: dynfrail
 Type: Package
 Title: Fitting dynamic frailty models with the EM algorithm
-Version: 0.3.1
+Version: 0.3.4
 Author: Theodor Adrian Balan
 Maintainer: Theodor Adrian Balan <t.a.balan@lumc.nl>
 Description: Fits semiparametric dynamic frailty models according to the methodology of Putter and van Houwelingen (2016). Intermediate models, where the frailty is piecewise constant on pre-specified intervals, are also supported. The frailty process is taken to have a specific auto-correlation structure, and the supported distributions include gamma, inverse Gaussian, PVF and positive stable. 
@@ -23,8 +23,9 @@ LazyData: true
 RoxygenNote: 6.0.1
 Collate: 
     'RcppExports.R'
+    'dynfrail_fit.R'
     'dynfrail_aux.R'
-    'em_fit.R'
     'dynfrail.R'
     'dynfrail_arguments.R'
+    'dynfrail_prep.R'
     'print.dynfrail.R'

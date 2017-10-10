@@ -27,8 +27,7 @@
 #' # reach the maximum.
 #' dynfrail_control(inner_control = list(maxit = 10))
 #'
-dynfrail_control <- function(opt_fit = TRUE,
-                            nlm_control = list(stepmax = 1),
+dynfrail_control <- function(nlm_control = list(stepmax = 1),
                             inner_control = list(eps = 0.0001,
                                                  maxit = 100,
                                                  verbose = FALSE,
@@ -50,8 +49,7 @@ dynfrail_control <- function(opt_fit = TRUE,
 
   inner_control <- do.call(inner_c, inner_control)
 
-  res <- list(opt_fit = opt_fit,
-              nlm_control = nlm_control,
+  res <- list(nlm_control = nlm_control,
               inner_control = inner_control)
   attr(res, "class") <- c("dynfrail_control")
   res

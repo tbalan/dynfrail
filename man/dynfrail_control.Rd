@@ -4,9 +4,8 @@
 \alias{dynfrail_control}
 \title{Control parameters for dynfrail}
 \usage{
-dynfrail_control(opt_fit = TRUE, nlm_control = list(stepmax = 1),
-  inner_control = list(eps = 1e-04, maxit = 100, verbose = FALSE, lik_tol =
-  1))
+dynfrail_control(nlm_control = list(stepmax = 1), inner_control = list(eps =
+  1e-04, maxit = 100, verbose = FALSE, lik_tol = 1))
 }
 \arguments{
 \item{nlm_control}{A list of named arguments to be sent to \code{nlm} for the outer optimization.}
@@ -35,7 +34,9 @@ The starting value of the outer optimization may be set in the \code{dynfrail_di
 }
 \examples{
 dynfrail_control()
-dynfrail_control(inner_control = list(maxit = 2))
+# this stops each EM (inner maximization) after 10 iterations, event if it did not
+# reach the maximum.
+dynfrail_control(inner_control = list(maxit = 10))
 
 }
 \seealso{

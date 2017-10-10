@@ -1,0 +1,52 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+This is an R package for fitting semiparametric dynamic frailty models with the EM algorithm. The hazard for individual $j$ from cluster $i$ is specified as:
+$$
+\lambda_{ij}(t | Z_i(t)) = Z_i(t) \exp(\beta^\top x_{ij}(t)) \lambda_0(t).
+$$
+The model used here is described in detail in [Putter & van Houwelingen (2015)](https://doi.org/10.1093/biostatistics/kxv002). The distribution of $Z_i(t)$ is described by two parameters: $\theta$, that is an inverse-variability parameter of $Z_i(t)$ for a fixed $t$, and $\lambda$, that describes the autocorrelation of the process, so that for $t_1 \leq t_2$
+$$
+\mathrm{cor}(Z_i(t_1), Z_i(t_2)) = \exp(\lambda (t_2 - t_1)).
+$$
+
+The estimation process is that for fixed $(\theta, \lambda)$ the maximized profile likelihood is calculated, i.e. maximized with respect to $(\beta, \lambda_0)$. This profile likelihood is finally maximized itself. 
+
+## Installation
+The development version from `GitHub`:
+```{r, eval=FALSE}
+devtools::install_github("tbalan/dynfrail")
+```
+The following packages are needed to build `dynfrail`:
+```{r, eval = FALSE} 
+install.packages(c("RcppArmadillo", "tibble", "magrittr", "dplyr", "tidyr"))
+```
+The functioning of the package is described in the documentation of the main fitting function, `dynfrail()`. 
+
+## Features
+
+- gamma, PVF, compount Poisson, inverse Gaussian distributions
+- flexible adjustment of estimation parameters
+- semiparametric $Z(t)$ that changes values at every $t$ or piecewise constant $Z(t)$
+- clustered survival data & recurrent events (calendar time or gaptime) ar supported
+
+## Functions
+
+- `dynfrail()` has a friendly syntax very similar to the `frailtyEM` package: next to a `formula` and `data` argument, the `distribution` argument is used to specify the distribution parameters and the `control` parameter is used for controling the precision of the estimation.
+- `dynfrail_prep()` and `dynfrail_fit()` are used internally by `dynfrail()` but are made user-available. The first one prepares the input of `dynfrail()` to make it suitable for the actual EM algorithm. The second one performs one EM algorithm for fixed $(\theta, \lambda)$ to estimate the maximum ($\beta$, $\lambda_0$). 
+
+## Limitations
+
+- slow even for medium sized data sets. It is recommended to start with a small number of piecewise constant intervals and/or a subset of the data
+- no direct standard errors for $(\theta, \lambda)$.

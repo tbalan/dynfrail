@@ -1,4 +1,32 @@
-em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the distribution, llambda - for the distance)
+#' Inner maximization of the log-likelihood
+#'
+#' @param logfrailtypar A vector containing the natural logarithm of the two parameters (\code{theta} - for the distribution, \code{lambda} - for the autocorrelation)
+#' @param dist Argument of \code{\link{dynfrail_dist}}
+#' @param pvfm Argument of \code{\link{dynfrail_dist}}
+#' @param Y A \code{Surv} object obtained by splitting the original data at all the time points where the frailty process takes new values
+#' @param Xmat A model matrix obtained by splitting the original data at all the time points where the frailty process takes new values
+#' @param atrisk A list of various calculations that are used in the maximization process.
+#' @param basehaz_line A vector with the baseline hazard estimate at each right hand side time point from \code{Y} (can be 0 for the others)
+#' @param mcox An initial Cox model
+#' @param c_vecs A list of the length equal to the number of clusters; each element contains a vector of the length of different values that \eqn{Z(t)} takes in that cluster.
+#' Each element of this vector contains the sum of the cumulative hazards associated with that value of the frailty.
+#' @param inner_control Argument of \code{\link{dynfrail_control}}
+#' @param return_loglik Logical. If \code{TRUE}, then this just returns the log-likelihood, otherwise it returns also the estimates and information matrix
+#'
+#' @return The log-likelihood if \code{return_loglik = TRUE} or a list with the log-likelihood and estimates if \code{return_loglik = FALSE}.
+#' @export
+#'
+#' @details This is an internal function that is used by \code{\link{dynfrail}}. It is not recommended to use this directly unless you know exactly what you are doing.
+#' On the other hand, this might be useful if someone wants, for example, to use different maximizers, or to calculate the log-likelihood
+#' at specific values of \code{theta, lambda}. Most of the input can be produced by \code{\link{dynfrail_prep}}.
+#'
+#' @examples
+#' arglist1 <- dynfrail_prep(Surv(time, status) ~ rx + sex + cluster(litter),
+#' data = rats)
+#'
+#' # using list() inside is because of the way that R converts lists and vectors
+#' mod1 <- do.call(dynfrail_fit, c(logfrailtypar = list(log(c(0.5, 0.1))), arglist1))
+dynfrail_fit <- function(logfrailtypar, #
                    dist,
                    pvfm,
                    Y,
@@ -7,9 +35,7 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
                    basehaz_line,
                    mcox = list(),
                    c_vecs,
-                   times,
                    inner_control, # a list of some parameters
-                   se = FALSE, # whether standard errors should be calculated
                    return_loglik = TRUE) {
 
 

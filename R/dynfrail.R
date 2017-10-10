@@ -1,7 +1,6 @@
 #' Fitting dynamic frailty models with the EM algorithm
 #'
 #'
-#' @include em_fit.R
 #' @importFrom survival Surv survSplit
 #' @importFrom magrittr "%>%"
 #' @importFrom Rcpp evalCpp
@@ -11,7 +10,7 @@
 #' @importFrom stats nlm drop.terms model.frame quantile terms model.matrix
 #' @useDynLib dynfrail, .registration=TRUE
 #' @include dynfrail_aux.R
-#' @include em_fit.R
+#' @include dynfrail_fit.R
 #'
 #' @param formula A formula that contains on the left hand side an object of the type \code{Surv}
 #' and on the right hand side a \code{+cluster(id)} statement.
@@ -271,21 +270,19 @@ dynfrail <- function(formula, data,
 
 
   outer_m <- do.call(nlm,
-                     args = c(list(f = em_fit, p = log(c(distribution$theta, 3)),
+                     args = c(list(f = dynfrail_fit, p = log(c(distribution$theta, 3)),
                                    dist = distribution$dist,
                                    pvfm = distribution$pvfm, Y = Y, Xmat = X,
                                    atrisk = atrisk, basehaz_line = basehaz_line,
                                    mcox =list(coefficients = g, loglik = mcox$loglik),
                                    c_vecs = c_vecs,
-                                   se = FALSE,
-                                   inner_control = control$inner_control   ), control$nlm_control))
+                                   inner_control = control$inner_control), control$nlm_control))
 
-  inner_m <- em_fit(logfrailtypar = c(outer_m$estimate[1], outer_m$estimate[2]),
+  inner_m <- dynfrail_fit(logfrailtypar = c(outer_m$estimate[1], outer_m$estimate[2]),
          dist = "pvf",
          pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
          mcox =list(coefficients = g, loglik = mcox$loglik),
          c_vecs = c_vecs,
-         se = TRUE,
          inner_control = control$inner_control,
          return_loglik = FALSE)
 
