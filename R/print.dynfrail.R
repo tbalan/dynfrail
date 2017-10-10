@@ -8,7 +8,7 @@ print.dynfrail <- function(x, ...) {
   cat("\n")
 
   cat("log-likelihood:", x$loglik[2], "\n")
-  cat("theta:", exp(x$logtheta), "\n")
+  cat("theta:", exp(x$logtheta), "|| 1/theta:",  1/exp(x$logtheta), "\n")
   cat("lambda:", exp(x$loglambda), "\n")
   cat("\n")
 

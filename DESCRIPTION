@@ -28,5 +28,3 @@ Collate:
     'dynfrail.R'
     'dynfrail_arguments.R'
     'print.dynfrail.R'
-    'test_models.R'
-    'testing.R'

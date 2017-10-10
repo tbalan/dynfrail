@@ -9,9 +9,7 @@ dynfrail(formula, data, distribution = dynfrail_dist(),
 }
 \arguments{
 \item{formula}{A formula that contains on the left hand side an object of the type \code{Surv}
-and on the right hand side a \code{+cluster(id)} statement. Optionally, also a \code{+terminal()} statement
-may be added, and then a score test for association between the event process and the result in the specified
-column is performed. See details.}
+and on the right hand side a \code{+cluster(id)} statement.}
 
 \item{data}{A data frame in which the formula argument can be evaluated}
 
@@ -40,4 +38,50 @@ and the maximized log-likelihood}
 }
 \description{
 Fitting dynamic frailty models with the EM algorithm
+}
+\details{
+This function fits dynamic frailty models where the intensity of the process is described by
+\deqn{\lambda(t) = Z(t) \exp(\beta^\top x) \lamdba_0(t).} As in regular frailty models, the random effect is
+shared by observations from a cluster, or by recurrent event episodes within an individual.
+This implementation generally follows the lines of Putter & van Houwelingen (2015). The maximum likelihood
+estimates are obtained with an exact E step.
+
+\eqn{Z(t)} has two parameters: \eqn{\theta} plays the role of the spread of the frailty distribution. For the frailty distributons with finite
+variance (all except the positive stable) this is the inverse of the variance, so that 0 corresponds to infinite variance and infinity to
+variance 0. The second parameter \eqn{\lamda} determines how much variation in time is in \eqn{Z(t)}, so that
+\deqn{cor(Z(t_1), Z(t_2)) = exp(-\lambda (t_2 - t_1)).} Note that this heavily depends on the time scale, so
+the starting value in the \code{distribution} should reflect that.
+
+By default, the program must calculate \eqn{Z(t)} for each cluster and for each event time point in the data.
+This is computationally challenging. An option is to use the \code{nints} argument in the \code{control} argument.
+This considers \eqn{Z(t)} to be piecewise constant over \code{nints + 1} intervals. These intervals are determined
+automatically so that there are roughly an equal number of observations for each interval. Using \code{nints = 0}
+is equivalent to fitting a shared frailty model with the \code{frailtyEM} package.
+
+It is recommended that the user starts with \code{nints = 0} and then slowly increase the number of intervals.
+Other options for performance may be set within the \code{control} argument. Also, this could be tried out first
+on a subset of the data.
+
+For computational reasons, the standard errors of \eqn{\theta} and \eqn{\lambda} are not calculated, and the standard errors of
+the regression coefficients are obtained under the assumption that the frailty distribution is fixed.
+}
+\examples{
+# essentially a gamma frailty fit
+m1 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
+data = rats,
+distribution = dynfrail_dist(n_ints = 0))
+
+# 5 piecewise constant intervals
+m2 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
+data = rats,
+distribution = dynfrail_dist(n_ints = 4))
+
+# completely semiparametric gamma frailty
+\dontrun{
+m2 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
+data = rats)
+}
+}
+\references{
+Putter, H., & Van Houwelingen, H. C. (2015). Dynamic frailty models based on compound birth–death processes. Biostatistics, 16(3), 550-564.
 }

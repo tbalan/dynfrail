@@ -4,24 +4,17 @@
 \alias{dynfrail_control}
 \title{Control parameters for dynfrail}
 \usage{
-dynfrail_control(opt_fit = TRUE, se = TRUE, se_adj = TRUE,
-  nlm_control = list(stepmax = 1), inner_control = list(eps = 1e-04, maxit =
-  100, verbose = TRUE, lik_tol = 1))
+dynfrail_control(opt_fit = TRUE, nlm_control = list(stepmax = 1),
+  inner_control = list(eps = 1e-04, maxit = 100, verbose = FALSE, lik_tol =
+  1))
 }
 \arguments{
-\item{opt_fit}{Logical. Whether the outer optimization should be carried out.
-If \code{FALSE}, then the frailty parameter is treated as fixed and the \code{emfrail} function returns only log-likelihood. See details.}
-
-\item{se}{Ignored}
-
-\item{se_adj}{Ignored}
-
 \item{nlm_control}{A list of named arguments to be sent to \code{nlm} for the outer optimization.}
 
 \item{inner_control}{A list of parameters for the inner optimization. See details.}
 }
 \value{
-An object of the type \code{emfrail_control}.
+An object of the type \code{dynfrail_control}.
 }
 \description{
 Control parameters for dynfrail

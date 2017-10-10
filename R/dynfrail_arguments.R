@@ -1,13 +1,9 @@
 #' Control parameters for dynfrail
 #'
-#' @param opt_fit Logical. Whether the outer optimization should be carried out.
-#' If \code{FALSE}, then the frailty parameter is treated as fixed and the \code{emfrail} function returns only log-likelihood. See details.
-#' @param se Ignored
-#' @param se_adj Ignored
 #' @param nlm_control A list of named arguments to be sent to \code{nlm} for the outer optimization.
 #' @param inner_control A list of parameters for the inner optimization. See details.
 #'
-#' @return An object of the type \code{emfrail_control}.
+#' @return An object of the type \code{dynfrail_control}.
 #' @export
 #'
 #' @details
@@ -27,15 +23,15 @@
 #' @seealso \code{\link{dynfrail}}, \code{\link{dynfrail_dist}}
 #' @examples
 #' dynfrail_control()
-#' dynfrail_control(inner_control = list(maxit = 2))
+#' # this stops each EM (inner maximization) after 10 iterations, event if it did not
+#' # reach the maximum.
+#' dynfrail_control(inner_control = list(maxit = 10))
 #'
 dynfrail_control <- function(opt_fit = TRUE,
-                            se = TRUE,
-                            se_adj = TRUE,
                             nlm_control = list(stepmax = 1),
                             inner_control = list(eps = 0.0001,
                                                  maxit = 100,
-                                                 verbose = TRUE,
+                                                 verbose = FALSE,
                                                  # lower_tol = 20,
                                                  lik_tol = 1)
 ) {
@@ -55,8 +51,6 @@ dynfrail_control <- function(opt_fit = TRUE,
   inner_control <- do.call(inner_c, inner_control)
 
   res <- list(opt_fit = opt_fit,
-              se = se,
-              se_adj = se_adj,
               nlm_control = nlm_control,
               inner_control = inner_control)
   attr(res, "class") <- c("dynfrail_control")
@@ -78,7 +72,7 @@ dynfrail_control <- function(opt_fit = TRUE,
 #' supported frailty distributions in a consistent way.
 #' @export
 #'
-#' @details The \code{theta} argument must be positive. In the case of gamma or PVF, this is the inverse of
+#' @details The \code{theta} and \code{lambda} arguments must be positive. In the case of gamma or PVF, \code{theta} is the inverse of
 #'  the frailty variance, i.e. the larger the \code{theta} is,
 #'  the closer the model is to a Cox model. When \code{dist = "pvf"} and \code{pvfm = -0.5}, the inverse Gaussian
 #'  distribution is obtained.

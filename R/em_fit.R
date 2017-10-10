@@ -143,12 +143,11 @@ em_fit <- function(logfrailtypar, # a vector of two parameters (theta - for the 
 
   if(isTRUE(return_loglik)) {
     # browser()
+    if(isTRUE(inner_control$verbose))
+      print(paste0("theta: ",round(exp(logfrailtypar), digits = 2),
+                 " lambda: ",round(pars$llambda, digits = 2),
+                 " loglik: ",round(loglik, digits = 4)))
 
-    print(paste0("ggamma: ",round(pars$ggamma, digits = 2),
-                 " llambda: ",round(pars$llambda, digits = 2),
-                 " loglik: ",round(loglik, digits = 3)))
-
-    if(isTRUE(inner_control$verbose)) print(paste("loglik = ",loglik))
     return(-loglik)
   }  # for when maximizing
 
