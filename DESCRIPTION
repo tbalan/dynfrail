@@ -16,7 +16,8 @@ Imports:
     dplyr,
     tidyr
 Suggests:
-    frailtyEM
+    frailtyEM,
+    knitr
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
 LazyData: true

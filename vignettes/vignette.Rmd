@@ -51,7 +51,7 @@ The functioning of the package is described in the documentation of the main fit
 - no direct standard errors for $(\theta, \lambda)$.
 
 ## Analyzing the output
-We take the `asthma` data set in the `parfm` package. I take a subset where each individual is censored after 4 events.
+We take the `asthma` data set in the `parfm` package. I take a subset where each individual is censored after 3 events.
 ```{r}
 library(parfm)
 library(dplyr)
@@ -61,7 +61,7 @@ small_asthma <-
   asthma %>% 
   group_by(Patid) %>% 
   mutate(linenr = 1:n()) %>% 
-  filter(linenr <= 4)
+  filter(linenr <= 3)
 ```
 
 This is a recurrent events data set in Andersen-Gill format with one covariate (`Drug`).
