@@ -17,7 +17,9 @@ Imports:
     tidyr
 Suggests:
     frailtyEM,
-    knitr
+    knitr,
+    parfm,
+    ggplot2
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
 LazyData: true
