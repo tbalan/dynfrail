@@ -251,26 +251,9 @@ dynfrail <- function(formula, data,
     arrange_("id", "interval")
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
-  # browser()
-
-  # c_vecs
-
-  #
-  # k <- lapply(1/seq(from = 0.01, to = 2, length.out = 25), function(th)
-  #   em_fit(logfrailtypar = log(c(th, distribution$lambda)),
-  #          dist = distribution$dist,
-  #          pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
-  #          mcox =list(coefficients = g, loglik = mcox$loglik),
-  #          c_vecs = c_vecs,
-  #          se = FALSE,
-  #          inner_control = control$inner_control)
-  #   )
-  #
-  # plot(seq(from = 0.01, to = 2, length.out = 25), do.call(c, k))
-
 
   outer_m <- do.call(nlm,
-                     args = c(list(f = dynfrail_fit, p = log(c(distribution$theta, 3)),
+                     args = c(list(f = dynfrail_fit, p = log(c(distribution$theta, distribution$lambda)),
                                    dist = distribution$dist,
                                    pvfm = distribution$pvfm, Y = Y, Xmat = X,
                                    atrisk = atrisk, basehaz_line = basehaz_line,
@@ -279,7 +262,7 @@ dynfrail <- function(formula, data,
                                    inner_control = control$inner_control), control$nlm_control))
 
   inner_m <- dynfrail_fit(logfrailtypar = c(outer_m$estimate[1], outer_m$estimate[2]),
-         dist = "pvf",
+         dist = distribution$dist,
          pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,
          mcox =list(coefficients = g, loglik = mcox$loglik),
          c_vecs = c_vecs,

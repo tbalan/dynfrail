@@ -39,7 +39,7 @@ dynfrail_control <- function(nlm_control = list(stepmax = 1),
 
   inner_c <- function(eps = 0.0001,
                       maxit = Inf,
-                      verbose = TRUE,
+                      verbose = FALSE,
                       lik_tol = 1) {
     list(eps = eps,
          maxit = maxit,

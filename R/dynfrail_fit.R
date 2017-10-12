@@ -47,24 +47,8 @@ dynfrail_fit <- function(logfrailtypar, #
     g_x <- t(mcox$coefficients %*% t(Xmat))
   }
 
-  # Here a check whether logfrailtypar is at the edge of the parameter space
-  # if(logfrailtypar > inner_control$lower_tol) {
-  #   #message("Frailty parameter very large, frailty variance close to 0")
-  #   loglik <- mcox$loglik[length(mcox$loglik)]
-  #   # loglik <- sum((log(basehaz_line) + g_x)[Y[,3] == 1]) +
-  #   #    sum(Y[,3]) - sum(nev_tp * log(nev_tp))
-  #
-  #   if(isTRUE(return_loglik)) {
-  #     if(isTRUE(inner_control$verbose)) print(paste("loglik = ",loglik))
-  #     return(-loglik)
-  #   }
-  #
-  # }
-
-
   loglik_old = -Inf
   ncycles <- 0
-  # browser()
 
   convergence <- FALSE
   while(!isTRUE(convergence)) {
@@ -72,10 +56,9 @@ dynfrail_fit <- function(logfrailtypar, #
     Estep <- lapply(seq_along(c_vecs), function(id) {
       Estep_id(events = atrisk$events_incluster[[id]], cvec = c_vecs[[id]],
                aalpha = pars$aalpha,
-               ggamma = pars$ggamma, dist = 0,
+               ggamma = pars$ggamma, dist = pars$dist,
                pvfm = -1/2, times = atrisk$times_incluster[[id]], llambda = pars$llambda)
     })
-
 
     # log-likelihood
     llik_contrib <- sum(do.call(c, lapply(Estep, function(x) {
@@ -104,11 +87,11 @@ dynfrail_fit <- function(logfrailtypar, #
                                   SIMPLIFY = FALSE
     )))
 
-
     mcox <- survival::agreg.fit(x = Xmat, y = Y, strata = NULL, offset = logz, init = NULL,
                                 control = survival::coxph.control(), weights = NULL,
                                 method = "breslow", rownames = NULL)
 
+    # print(paste("logz[1:3]", logz[1], logz[2], logz[3]))
 
     if(length(Xmat)==0) {
       lp <- mcox$linear.predictors
@@ -136,6 +119,7 @@ dynfrail_fit <- function(logfrailtypar, #
 
     nrisk <- nrisk - c(esum, 0,0)[atrisk$indx]
     haz <- atrisk$nevent/nrisk #  * newrisk
+    # print(paste(haz[1], haz[2], haz[3], haz[4], haz[5]))
 
 
     cumhaz <- cumsum(haz)
@@ -249,7 +233,7 @@ dynfrail_fit <- function(logfrailtypar, #
   Iloss <- Vcov_adj(events_l = atrisk$events_incluster,
                        cvec_l = c_vecs,
                        aalpha = pars$aalpha,
-                       ggamma = pars$ggamma, dist = 0,
+                       ggamma = pars$ggamma, dist = pars$dist,
                        pvfm = -1/2, times_l = atrisk$times_incluster, llambda = pars$llambda,
                        elp_l = rows_elp,
                        xelph_l = rows_x_elp_H0,
@@ -261,9 +245,9 @@ dynfrail_fit <- function(logfrailtypar, #
 
 
   if(!is.null(mcox$coefficients)) {
-    Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg + Iloss$betabeta
-    Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg) + t(Iloss$betalambda)
-    Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg + Iloss$betalambda
+    Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg - Iloss$betabeta
+    Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg) - t(Iloss$betalambda)
+    Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg - Iloss$betalambda
   }
 
   # make it into matrix
@@ -275,7 +259,10 @@ dynfrail_fit <- function(logfrailtypar, #
     t(vapply(1:n, function(x) {y <<- y+n+2L-x; c(rep(0L,x-1L),k[y:(y+n-x)])}, r))
   }
 
-  Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh + Triangle1(Iloss$lambdalambda, length(nev_tp))
+  cor_dh <- Triangle1(Iloss$lambdalambda, length(nev_tp))
+  cor_dh[lower.tri(cor_dh)] <- t(cor_dh)[lower.tri(cor_dh)]
+
+  Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh - cor_dh
 
   # se <- try(solve(Imat))
 

@@ -105,11 +105,12 @@ double S(const int& deriv, const int& left, const int& right, const double& ggam
 
   for(unsigned int i = 0; i < left; i++)
     for(unsigned int j = right - 1; j < cvec.size(); j++) {
-      // Rcout<<"("<<i + 1<<" "<<j + 1<<")";
+      // Rcout<<"psi^("<<deriv<<")(sum[c_"<<i<<"^"<<j<<"])";
       double ck1k2 = std::accumulate(cvec.begin() + i, cvec.begin() + j + 1, 0.0);
       res += psi(dist, pvfm, ggamma, deriv, ck1k2) * g(llambda, times, i, j);
     }
 
+    // Rcout<<std::endl;
     return res;
 }
 
@@ -170,7 +171,6 @@ double divideSum(const std::vector<int> &events, const NumericVector &cvec, cons
 
         int nset = kappa[j];
 
-        //Rcout<<" adding to set number... "<<nset<<" pertaining to time point "<<timepoints[i]<<std::endl;
         indexes[nset][0]++;
 
         if(indexes[nset][1]==0 || indexes[nset][1] > events[j]) indexes[nset][1] = events[j];
@@ -179,19 +179,10 @@ double divideSum(const std::vector<int> &events, const NumericVector &cvec, cons
 
       }
 
-      // for(int i = 0; i < indexes.size(); i++)
-      //   Rcout<<"("<<indexes[i][0]<<","<<indexes[i][1]<<","<<indexes[i][2]<<")  ";
-      //
+      // for(int p = 0; p < indexes.size(); p++)
+      //   Rcout<<"("<<indexes[p][0]<<","<<indexes[p][1]<<","<<indexes[p][2]<<")  ";
+
       // Rcout<<std::endl;
-
-      //
-
-
-      // double S(int deriv, int left, int right,
-      //          double ggamma,
-      //          double lambda,
-      //          int dist, double pvfm,
-      //          NumericVector times, NumericVector cvec)
 
       double res_part = 1.0;
 
@@ -219,6 +210,8 @@ NumericVector Estep_id(NumericVector events, NumericVector cvec, double aalpha, 
   std::vector<int> events_add(events.begin(), events.end());
   double denom = divideSum(events_add, cvec, aalpha, ggamma, dist, pvfm, times, llambda);
 
+
+  // Rcout<<std::endl<<"--- now the numerator"<<std::endl;
   std::vector<double> num;
 
   std::vector<int> base = events_add;

@@ -179,3 +179,19 @@ summary(m1_sf)
 
 Note that in this case the likelihood is completely flat in $\lambda$! This can be checked as was shown in the previous part. 
 
+The estimates are slightly different, although the likelihood of the two models is virtually the same. This boild down to the precision of the estimates. Therefore, if we increase the precision in both models, the estimates would get even closer:
+
+```{r}
+m1_b <- dynfrail(Surv(Begin, End, Status) ~ Drug + cluster(Patid), data = small_asthma,
+         distribution = dynfrail_dist(n_ints = 0), 
+         control = dynfrail_control(
+           inner_control = list(eps = 1e-07, maxit = Inf)))
+
+m1_b_sf <- emfrail(Surv(Begin, End, Status) ~ Drug + cluster(Patid), data = small_asthma,
+            control = emfrail_control(
+              inner_control = list(eps = 1e-07, maxit = Inf)))
+m1_b
+m1_b_sf
+```
+
+
