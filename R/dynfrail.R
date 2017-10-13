@@ -116,11 +116,14 @@ dynfrail <- function(formula, data,
 
     quants <- quantile(tev_unique_ord,
              probs = seq(from = 0, to = 1,
-                         length.out = distribution$n_ints + 2))
+                         length.out = distribution$n_ints + 2), type = 1)
 
 
-    cut <- tev_unique_ord[findInterval(x = quants[-c(1, length(quants))],
-      vec = tev_unique_ord)]
+    cut <- quants[-c(1, length(quants))]
+
+    # this is a bit dodgy but this is only needed further to
+    # assign time points to intervals of the frailty
+    tev_unique_ord <- quants[-1]
 
   } else
     if(!is.null(distribution$times)) cut <- distribution$times else
@@ -223,12 +226,15 @@ dynfrail <- function(formula, data,
     tev_unique_ord[x]
   )
 
+  # for each cluster, in which interval do the events fall
   atrisk$events_incluster <- lapply(delta, function(x) {
     rep(1:length(x), x)
   })
 
+  # for each row, to which frailty interval it belongs
   atrisk$interval_incluster <-
     split(df_dynfrail$interval_, df_dynfrail$id_)
+
   # First calculation of the cumulative hazard
   nrisk <- nrisk - c(esum, 0,0)[indx]
 
@@ -251,6 +257,24 @@ dynfrail <- function(formula, data,
     arrange_("id", "interval")
 
   c_vecs <- split(chz_id_interval$V1, chz_id_interval$id)
+#
+#   browser()
+#
+#   poia<-nlm(f = dynfrail_fit, p =log(c(distribution$theta, distribution$lambda)),
+#       dist = distribution$dist,
+#       pvfm = distribution$pvfm, Y = Y, Xmat = X,
+#       atrisk = atrisk, basehaz_line = basehaz_line,
+#       mcox =list(coefficients = g, loglik = mcox$loglik),
+#       c_vecs = c_vecs,
+#       inner_control = control$inner_control)
+#
+#   optim(par = log(c(distribution$theta, distribution$lambda)), fn = dynfrail_fit,
+#         dist = distribution$dist,
+#         pvfm = distribution$pvfm, Y = Y, Xmat = X,
+#         atrisk = atrisk, basehaz_line = basehaz_line,
+#         mcox =list(coefficients = g, loglik = mcox$loglik),
+#         c_vecs = c_vecs,
+#         inner_control = control$inner_control)
 
   outer_m <- do.call(nlm,
                      args = c(list(f = dynfrail_fit, p = log(c(distribution$theta, distribution$lambda)),
@@ -260,7 +284,8 @@ dynfrail <- function(formula, data,
                                    mcox =list(coefficients = g, loglik = mcox$loglik),
                                    c_vecs = c_vecs,
                                    inner_control = control$inner_control), control$nlm_control))
-
+#
+#   outer_m <- poia
   inner_m <- dynfrail_fit(logfrailtypar = c(outer_m$estimate[1], outer_m$estimate[2]),
          dist = distribution$dist,
          pvfm = distribution$pvfm, Y = Y, Xmat = X, atrisk = atrisk, basehaz_line = basehaz_line,

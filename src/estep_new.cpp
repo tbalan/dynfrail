@@ -286,18 +286,6 @@ void Vcov_adj_id(const NumericVector &events,
                   arma::mat &betalambda // this will get modified
                  ) {
 
-  //define the outputs
-
-  //arma::mat betabeta = arma::mat(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
-  // arma::mat betabeta(xelph.n_cols, xelph.n_cols, arma::fill::zeros);
-  // std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
-  // arma::mat betalambda(n_times, xelph.n_cols, arma::fill::zeros);
-
-  // Rcout<<betabeta.n_rows<< " x "<<betabeta.n_cols;
-
-  //for (beta, beta) it will be a 2x2 matrix
-  //for lambda lambda it will have to be a
-
   // make the List into a vector of vectors
   std::vector<std::vector<int> > int_rows(interval_rows.size());
 
@@ -407,7 +395,8 @@ void Vcov_adj_id(const NumericVector &events,
 // [[Rcpp::export]]
 List Vcov_adj(List events_l,
               List cvec_l,
-              double aalpha, double ggamma, int dist, double pvfm,
+              double aalpha,
+              double ggamma, int dist, double pvfm,
               List times_l,
               double llambda,
               List elp_l,
@@ -423,24 +412,6 @@ List Vcov_adj(List events_l,
   arma::mat betabeta(n_covs, n_covs, arma::fill::zeros);
   std::vector<double> lambdalambda(n_times * (n_times+1)/2, 0.0);
   arma::mat betalambda(n_times, n_covs, arma::fill::zeros);
-
-  // Rcout<<"I am IN";
-
-
-
-    // Vcov_adj_id4(events_l[1],
-    //               cvec_l[1],
-    //               aalpha, ggamma, dist, pvfm,
-    //               times_l[1], llambda,
-    //               elp_l[1],
-    //               xelph_l[1],
-    //               tau_l[1],
-    //               interval_rows_l[1],
-    //               ez_l[1],
-    //               n_times,
-    //               betabeta,
-    //               lambdalambda,
-    //               betalambda);
 
     for(int indiv = 0; indiv < events_l.size(); indiv++)
       Vcov_adj_id(events_l[indiv],

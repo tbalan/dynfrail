@@ -150,11 +150,12 @@ dynfrail_fit <- function(logfrailtypar, #
 
     }
 
+  # browser()
 
   if(isTRUE(return_loglik)) {
     # browser()
     if(isTRUE(inner_control$verbose))
-      print(paste0("theta: ",round(exp(logfrailtypar), digits = 2),
+      print(paste0("gamma: ",round(pars$ggamma, digits = 2),
                  " lambda: ",round(pars$llambda, digits = 2),
                  " loglik: ",round(loglik, digits = 4)))
 
@@ -243,7 +244,6 @@ dynfrail_fit <- function(logfrailtypar, #
                        n_times = length(tev),
                        n_covs = ncol(Xmat))
 
-
   if(!is.null(mcox$coefficients)) {
     Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg - Iloss$betabeta
     Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg) - t(Iloss$betalambda)
@@ -264,7 +264,28 @@ dynfrail_fit <- function(logfrailtypar, #
 
   Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh - cor_dh
 
+  browser()
+  # solve(Imat) %>% diag %>% sqrt
   # se <- try(solve(Imat))
+
+#
+#   Imat0 <- Imat
+#
+#   Imat0[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
+#   Imat0[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
+#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
+#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
+#
+#   Imat1 <- Imat
+#
+#   Imat0[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- Iloss$betabeta
+#   Imat0[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <-  t(Iloss$betalambda)
+#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <-  Iloss$betalambda
+#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- cor_dh
+#
+#   (Imat - Imat0) %>% eigen(., only.values = TRUE)
+#   (Imat - Imat0) %>% diag
+#   solve(Imat0) %>% diag %>% sqrt
 
 
   if(!isTRUE(return_loglik)) {
