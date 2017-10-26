@@ -80,12 +80,20 @@ dynfrail_fit <- function(logfrailtypar, #
 
 
     # match the logz to the rows of the data frame
-    logz <- log(do.call(c, mapply(function(a, b) a[b],
-                                  lapply(Estep, function(x)
-                                    -x[1:(length(x) - 2)] / x[length(x) - 1]),
-                                  atrisk$interval_incluster,
-                                  SIMPLIFY = FALSE
-    )))
+    # logz <- log(do.call(c, mapply(function(a, b) a[b],
+    #                               lapply(Estep, function(x)
+    #                                 -x[1:(length(x) - 2)] / x[length(x) - 1]),
+    #                               atrisk$interval_incluster,
+    #                               SIMPLIFY = FALSE
+    # )))
+
+    logz <- do.call(c,
+    mapply(function(a,b) a[b],
+           lapply(Estep, function(x) log(abs(x[1:(length(x) - 2)])) -
+                                        log(abs(x[length(x) - 1]))),
+           atrisk$interval_incluster,
+           SIMPLIFY = FALSE)
+    )
 
     mcox <- survival::agreg.fit(x = Xmat, y = Y, strata = NULL, offset = logz, init = NULL,
                                 control = survival::coxph.control(), weights = NULL,
@@ -229,7 +237,8 @@ dynfrail_fit <- function(logfrailtypar, #
 
   # Now to make sum calculations
 
-  ez <- lapply(Estep, function(x) -x[1:(length(x) - 2)] / x[length(x) - 1])
+  ez <- lapply(Estep, function(x)
+    -x[1:(length(x) - 2)] / x[length(x) - 1])
 
   Iloss <- Vcov_adj(events_l = atrisk$events_incluster,
                        cvec_l = c_vecs,
@@ -244,7 +253,22 @@ dynfrail_fit <- function(logfrailtypar, #
                        n_times = length(tev),
                        n_covs = ncol(Xmat))
 
-  if(!is.null(mcox$coefficients)) {
+
+  # Iloss_id <- Vcov_adj(events_l = atrisk$events_incluster[id],
+  #                   cvec_l = c_vecs[id],
+  #                   aalpha = pars$aalpha,
+  #                   ggamma = pars$ggamma, dist = pars$dist,
+  #                   pvfm = -1/2, times_l = atrisk$times_incluster[id], llambda = pars$llambda,
+  #                   elp_l = rows_elp[id],
+  #                   xelph_l = rows_x_elp_H0[id],
+  #                   tau_l = rows_tau[id],
+  #                   interval_rows_l = interval_rows[id],
+  #                   ez_l = ez[id],
+  #                   n_times = length(tev),
+  #                   n_covs = ncol(Xmat))
+
+
+if(!is.null(mcox$coefficients)) {
     Imat[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg - Iloss$betabeta
     Imat[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg) - t(Iloss$betalambda)
     Imat[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg - Iloss$betalambda
@@ -269,21 +293,43 @@ dynfrail_fit <- function(logfrailtypar, #
   # se <- try(solve(Imat))
 
 #
-#   Imat0 <- Imat
+  Imat0 <- Imat
+
+  Imat0[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
+  Imat0[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
+  Imat0[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
+  Imat0[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
 #
-#   Imat0[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
-#   Imat0[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
-#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
-#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
+  Imat1 <- Imat
+
+  Imat1[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- Iloss$betabeta
+  Imat1[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <-  t(Iloss$betalambda)
+  Imat1[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <-  Iloss$betalambda
+  Imat1[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- cor_dh
 #
-#   Imat1 <- Imat
-#
-#   Imat0[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- Iloss$betabeta
-#   Imat0[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <-  t(Iloss$betalambda)
-#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <-  Iloss$betalambda
-#   Imat0[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- cor_dh
-#
-#   (Imat - Imat0) %>% eigen(., only.values = TRUE)
+#   (Imat - Imat0) %>% eigen(., only.values = TRUE)  # Iloss_id <- Vcov_adj(events_l = atrisk$events_incluster[id],
+  #                   cvec_l = c_vecs[id],
+  #                   aalpha = pars$aalpha,
+  #                   ggamma = pars$ggamma, dist = pars$dist,
+  #                   pvfm = -1/2, times_l = atrisk$times_incluster[id], llambda = pars$llambda,
+  #                   elp_l = rows_elp[id],
+  #                   xelph_l = rows_x_elp_H0[id],
+  #                   tau_l = rows_tau[id],
+  #                   interval_rows_l = interval_rows[id],
+  #                   ez_l = ez[id],
+  #                   n_times = length(tev),
+  # Iloss_id <- Vcov_adj(events_l = atrisk$events_incluster[id],
+  #                   cvec_l = c_vecs[id],
+  #                   aalpha = pars$aalpha,
+  #                   ggamma = pars$ggamma, dist = pars$dist,
+  #                   pvfm = -1/2, times_l = atrisk$times_incluster[id], llambda = pars$llambda,
+  #                   elp_l = rows_elp[id],
+  #                   xelph_l = rows_x_elp_H0[id],
+  #                   tau_l = rows_tau[id],
+  #                   interval_rows_l = interval_rows[id],
+  #                   ez_l = ez[id],
+  #                   n_times = length(tev),
+
 #   (Imat - Imat0) %>% diag
 #   solve(Imat0) %>% diag %>% sqrt
 
