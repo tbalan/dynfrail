@@ -309,7 +309,7 @@ void Vcov_adj_id(const NumericVector &events,
 
     newvec.insert(pos, i);
 
-    for(int j = i; j<= cvec.size(); j++) {
+    for(int j = 1; j<= cvec.size(); j++) {
 
       std::vector<int> newvec2 = newvec;
 
@@ -317,50 +317,68 @@ void Vcov_adj_id(const NumericVector &events,
 
       newvec2.insert(pos2, j);
 
+
+      // Rcout<<"Adding intervals "<<i<<" and "<<j<<", ";
+      // Rcout<<"numerator: ";
+      // for(std::vector<int>::iterator it = newvec2.begin(); it != newvec2.end(); it++)
+      //   Rcout<<*it<<" ";
+      // Rcout<<std::endl;
+
+
       //e[z1z2]
       double exy_exey = divideSum(newvec2, cvec, aalpha, ggamma, dist, pvfm, times, llambda)/denom - ez[i-1] * ez[j-1];
 
+      // Rcout<<"exey: "<<exy_exey;
       // Rcout<<"i="<<i<<", j="<<j<<std::endl;
 
       // std::vector<double> tmp1(xelph.n_cols, 0.0);
       // std::vector<double> tmp2(xelph.n_cols, 0.0);
-      arma::rowvec tmp1(xelph.n_cols, arma::fill::zeros);
-      arma::rowvec tmp2(xelph.n_cols, arma::fill::zeros);
+      arma::rowvec tmp_i(xelph.n_cols, arma::fill::zeros);
+      arma::rowvec tmp_j(xelph.n_cols, arma::fill::zeros);
 
+      // l1 is the rows of interval i
       for(std::vector<int>::iterator l1 = int_rows[i-1].begin(); l1 != int_rows[i-1].end(); l1++) {
 
-        tmp1 += xelph.row(*l1 - 1);
+        tmp_i += xelph.row(*l1 - 1);
         // Rcout<<"add line "<<*l1<<" to tmp1";
         //
         // Rcout<<std::endl;
 
+        // l2 is the rows of interval j
         for(std::vector<int>::iterator l2 = int_rows[j-1].begin(); l2 != int_rows[j-1].end(); l2++) {
 
-          // Rcout<<*l1<<" "<<*l2<<" /// ";
+          // Rcout<<std::endl;
+          // Rcout<<"Looking at lines: "<<*l1<<" "<<*l2<<" /// ";
           // Rcout<<"["<<tau(*l1-1, 0)<<", "<<tau(*l1-1, 1)<<") // ";
           // Rcout<<"["<<tau(*l2-1, 0)<<", "<<tau(*l2-1, 1)<<") //";
-          //
           // Rcout<<std::endl;
+
+          // p is the times within the line l1
 
           for(int p = tau(*l1 - 1, 0); p < tau(*l1 - 1, 1); p++)  {
 
-            // when i!=j this would normally get added twice
-            if(i == j) {
-              betalambda.row(p) += exy_exey * elp[*l1-1] * xelph.row(*l2-1);
-            } else
-              betalambda.row(p) += 2.0 * exy_exey * elp[*l1-1] * xelph.row(*l2-1);
 
+            betalambda.row(p) += exy_exey * elp[*l1-1] * xelph.row(*l2-1);
+
+            // when i!=j this would normally get added twice
+            // if(i == j) {
+            //   betalambda.row(p) += exy_exey * elp[*l1-1] * xelph.row(*l2-1);
+            // } else
+            //   betalambda.row(p) += exy_exey * elp[*l1-1] * xelph.row(*l2-1) +
+            //     exy_exey * xelph.row(*l1 -1) * elp[*l2 - 1];
+
+            // q is the times within line l2
 
             for(int q = tau(*l2 -1, 0); q < tau(*l2 - 1, 1); q++)
-              // this is a dumb thing: I only care for unique combinations of (p,q) since the matrix is symmetric
-              // I don't know this in advance so I loop through the whole thing...
-              // if i != j then that would get added twice, I make this explicit
+
               if(p <= q) {
-                if (i==j) {
-                  lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * elp[*l1-1] * elp[*l2-1];
-                } else {
-                  lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * 2.0 * elp[*l1-1] * elp[*l2-1];
-                }
+                lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * elp[*l1-1] * elp[*l2-1];
+
+                // if (i==j) {
+                //   lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * elp[*l1-1] * elp[*l2-1];
+                // } else {
+                //   lambdalambda[n_times * p - p * (p+1)/2 + q] += exy_exey * 2.0 * elp[*l1-1] * elp[*l2-1];
+                // }
               }
 
 
@@ -368,7 +386,7 @@ void Vcov_adj_id(const NumericVector &events,
 
           // this must be added just once; I loop through these values more times unfortunately
           if(l1 == int_rows[i-1].begin()) {
-            tmp2 += xelph.row(*l2 - 1);
+            tmp_j += xelph.row(*l2 - 1);
             // Rcout<<"add line "<<*l2<<" to tmp2";
             // Rcout<<std::endl;
           }
@@ -380,10 +398,16 @@ void Vcov_adj_id(const NumericVector &events,
 
       }
 
-        if(i == j) {
-          betabeta += exy_exey * trans(tmp1) * tmp2;
-        } else
-          betabeta += 2.0 * exy_exey * trans(tmp1) * tmp2;
+      betabeta += exy_exey * trans(tmp_i) * tmp_j;
+
+        // if(i == j) {
+        //   betabeta += exy_exey * trans(tmp1) * tmp2;
+        // } else
+        //   betabeta += exy_exey * trans(tmp1) * tmp2 +
+        //     exy_exey * trans(tmp2) * trans(tmp1);
+
+        // point being: because we don't loop through ALL the combination (
+        //  j >= i
 
 
     }

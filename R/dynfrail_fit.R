@@ -240,6 +240,7 @@ dynfrail_fit <- function(logfrailtypar, #
   ez <- lapply(Estep, function(x)
     -x[1:(length(x) - 2)] / x[length(x) - 1])
 
+  # browser()
   Iloss <- Vcov_adj(events_l = atrisk$events_incluster,
                        cvec_l = c_vecs,
                        aalpha = pars$aalpha,
@@ -253,7 +254,16 @@ dynfrail_fit <- function(logfrailtypar, #
                        n_times = length(tev),
                        n_covs = ncol(Xmat))
 
+  # events_incluster is a vector with where the events are in the cluster, for the intervals of the frailty;
+  # e.g. 1 1 3 means that there are two events in the FIRST frailty interval, one in 3.
+  # this is relative to the intervals that exist in the cluster, not in all the intervals ever.
+  # then cvec is a vector (c1, c2, c3) for example means that for 3 frailty intervals that is the summed up cumhaz
+  # times_incluster assigns time points to the intervals (c1, c2, c3)
+  # tau is sort of the Y but it delimits the rank of each time point instead of the time point itself
+  # intervals_rows is a LIST: for each frailty interval it says which lines belong to that interval
 
+
+  # id <- 163
   # Iloss_id <- Vcov_adj(events_l = atrisk$events_incluster[id],
   #                   cvec_l = c_vecs[id],
   #                   aalpha = pars$aalpha,
@@ -288,50 +298,9 @@ if(!is.null(mcox$coefficients)) {
 
   Imat[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh - cor_dh
 
-  browser()
+  # browser()
   # solve(Imat) %>% diag %>% sqrt
-  # se <- try(solve(Imat))
-
-#
-  Imat0 <- Imat
-
-  Imat0[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- m_d2l_dgdg
-  Imat0[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <- t(m_d2l_dhdg)
-  Imat0[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <- m_d2l_dhdg
-  Imat0[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- m_d2l_dhdh
-#
-  Imat1 <- Imat
-
-  Imat1[1:length(mcox$coefficients), 1:length(mcox$coefficients)] <- Iloss$betabeta
-  Imat1[1:length(mcox$coefficients), (length(mcox$coefficients)+1):nrow(Imat) ] <-  t(Iloss$betalambda)
-  Imat1[(length(mcox$coefficients)+1):nrow(Imat), 1:length(mcox$coefficients) ] <-  Iloss$betalambda
-  Imat1[(length(mcox$coefficients)+1):nrow(Imat), (length(mcox$coefficients)+1):nrow(Imat)] <- cor_dh
-#
-#   (Imat - Imat0) %>% eigen(., only.values = TRUE)  # Iloss_id <- Vcov_adj(events_l = atrisk$events_incluster[id],
-  #                   cvec_l = c_vecs[id],
-  #                   aalpha = pars$aalpha,
-  #                   ggamma = pars$ggamma, dist = pars$dist,
-  #                   pvfm = -1/2, times_l = atrisk$times_incluster[id], llambda = pars$llambda,
-  #                   elp_l = rows_elp[id],
-  #                   xelph_l = rows_x_elp_H0[id],
-  #                   tau_l = rows_tau[id],
-  #                   interval_rows_l = interval_rows[id],
-  #                   ez_l = ez[id],
-  #                   n_times = length(tev),
-  # Iloss_id <- Vcov_adj(events_l = atrisk$events_incluster[id],
-  #                   cvec_l = c_vecs[id],
-  #                   aalpha = pars$aalpha,
-  #                   ggamma = pars$ggamma, dist = pars$dist,
-  #                   pvfm = -1/2, times_l = atrisk$times_incluster[id], llambda = pars$llambda,
-  #                   elp_l = rows_elp[id],
-  #                   xelph_l = rows_x_elp_H0[id],
-  #                   tau_l = rows_tau[id],
-  #                   interval_rows_l = interval_rows[id],
-  #                   ez_l = ez[id],
-  #                   n_times = length(tev),
-
-#   (Imat - Imat0) %>% diag
-#   solve(Imat0) %>% diag %>% sqrt
+  # try(solve(Imat))
 
 
   if(!isTRUE(return_loglik)) {
