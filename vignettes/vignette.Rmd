@@ -183,5 +183,54 @@ summary(m1_sf)
 
 Note that in this case the likelihood is completely flat in $\lambda$! This can be checked as was shown in the previous part. 
 
+## The information matrix
+The information matrix is calculated with Louis' formula, for a fixed $\theta, \lambda$. Denoting all the other parameters by $\gamma$, this means:
+$$
+I = \mathrm{E} \left[ \frac{d^2}{d \gamma d \gamma^\top} l \right] - \mathrm{E}\left[ \frac{d}{d \gamma}  \frac{d}{d \gamma^\top} \right]
+$$
+The first part is a matrix with the expectation of the second derivatives of the complete-data likelihood. 
+That is:
+$$
+l = \sum_k \left[ \sum_i \delta_{ki} ( \log h_{0ki} + \beta^\top x_{ki}) - \sum_l z_{ki} e^{\beta^\top x_{ki}} \Lambda_{0ki} \right]
+$$
+where $k$ is for individual/cluster and $i$ is for a certain line in the data set. The lines are not in the original data set, but rather in a data set that was splitted at the time points of where the frailty changes. Then $z_{ki}$ is the frailty on that line and $\Lambda_{0ki}$ is the cumulative baseline hazard for that line.
 
+The derivatives go as follows:
+$$
+\frac{\partial l}{\partial \beta} = \sum_k \left[\sum_i x_{ki} \delta_{ki} - \sum_i x_{ki} z_{ki} e^{\beta^\top x_{ki}}\Lambda_{0ki} \right]
+$$
+$$
+\frac{\partial l}{\partial h_t} = \sum_k \left[\sum_i \frac{\delta_{ki}}{h_{0ki}} 1(R_{ki} = t) - x_{ki} \delta_{ki} - \sum_i  z_{ki} e^{\beta^\top x_{ki}} 1(t \in (L_{ki}, R_{ki}]) \right]
+$$
+where $R_{ki}$ is the `tstop` of the line and $L_{ki}$ is the `tstart` of the line.
+
+The first matrix that of second derivatives is easy to calculate and it is all written only in R, so the code is there and pretty easy to descipher. 
+
+For the second matrix it gets a bit tricky. 
+Take the part within brackets of $\partial l / \partial \beta$ as $B_k$.
+Then we can write:
+$$
+\mathrm{E} \left[\frac{\partial l}{\partial \beta} \frac{\partial l}{\partial \beta^\top} \right] = \mathrm{E} \left[\sum_k B_k  \sum_l B_l \right] 
+= \sum_k \sum_{l \neq k} \mathrm{E} B_k \mathrm{E} B_l^\top + \sum_k \mathrm{E} B_k B_k^\top 
+$$
+Now we use the fact that the score functions are 0 at the maximum likelihood, so this can be written as
+$$
+\mathrm{E} \left[\frac{\partial l}{\partial \beta} \frac{\partial l}{\partial \beta^\top} \right] =  = \sum_k \left[ \mathrm{E} B_k B_k^\top  - \mathrm{E} B_k \mathrm{E}B_k^\top    \right]
+$$
+Now further we can split $B_k$ into $B_{k1}$ and $B_{k2}$, with the first part does not depend on the frailty. So all expectations that involve that one are actually the same in both terms from the equation here, so they cancel out. 
+Now about the frailty we know that the estimates are independent if they are from different clusters. 
+Either way, we can write this thing as 
+$$
+\sum_k \sum_{i,j} \left( \mathrm{E} [Z_{ki} Z_{kj}] - \mathrm{E} Z_{ki} \mathrm{E} Z_{kj} \right) \,xelpH_{ki} \,\, xelpH_{kj}^\top
+$$ 
+where $xelpH_{ki} = x_{ki} e^{\beta^\top x_{ki}} \Lambda_{0ki}$. 
+
+The rest of the combinations are done in a similar fashion. Here is an outline of how the algorithm actually things about stuff:
+
+- define the matrices and vectors corresponding to $\mathrm{E}\left[ \frac{d}{d \gamma}  \frac{d}{d \gamma^\top} \right]$
+- Loop over clusters
+- Within each cluster, we loop over the different frailty estimates (interval) that exist within each of them ($i,j$)
+- Within each combination of $i,j$ we loop over the rows from the data that exist in those intervals.
+- for each combination of rows, we loop over the time points that are contained in those rows
+- only at this point we add the relevant contributions to the total information matrix
 
