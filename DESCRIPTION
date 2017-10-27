@@ -31,6 +31,5 @@ Collate:
     'dynfrail.R'
     'dynfrail_arguments.R'
     'dynfrail_prep.R'
-    'moretest.R'
     'print.dynfrail.R'
 VignetteBuilder: knitr
