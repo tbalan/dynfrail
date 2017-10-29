@@ -65,18 +65,18 @@
 #' the regression coefficients are obtained under the assumption that the frailty distribution is fixed.
 #'
 #' @examples
-#' # essentially a gamma frailty fit
-#' m1 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
-#' data = rats,
-#' distribution = dynfrail_dist(n_ints = 0))
-#'
 #' # 5 piecewise constant intervals
 #' m2 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
 #' data = rats,
 #' distribution = dynfrail_dist(n_ints = 4))
 #'
-#' # completely semiparametric gamma frailty
 #' \dontrun{
+#' #' # essentially a gamma frailty fit
+#' m1 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
+#' data = rats,
+#' distribution = dynfrail_dist(n_ints = 0))
+#'
+#' # completely semiparametric gamma frailty
 #' m2 <- dynfrail(Surv(time, status) ~ rx + sex + cluster(litter),
 #' data = rats)
 #' }
